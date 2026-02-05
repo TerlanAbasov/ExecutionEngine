@@ -1,0 +1,17 @@
+server:
+  port: 8081
+  ssl:
+    enabled: false
+logging:
+  level:
+    az.kapitalbank.risk.scoring: INFO
+    ROOT: INFO
+
+application:
+  client:
+    discord:
+      url: 'https://discord.com'
+    telegram:
+      url: 'https://api.telegram.org'
+      token: '8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA'
+      chatId: '1014578999'
