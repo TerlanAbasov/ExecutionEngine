@@ -2,7 +2,6 @@ package com.quant.finance.execution.service;
 
 import com.quant.finance.execution.client.DiscordClient;
 import com.quant.finance.execution.model.DiscordMessage;
-import java.io.IOException;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

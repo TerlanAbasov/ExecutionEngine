@@ -1,0 +1,5 @@
+databaseChangeLog:
+    -   includeAll:
+            path: changelog/tables/1.0
+    -   includeAll:
+            path: changelog/indexes/1.0

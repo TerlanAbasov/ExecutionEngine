@@ -1,14 +1,21 @@
 package com.quant.finance.execution.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
 import com.ib.client.Order;
-import com.quant.finance.execution.client.DiscordClient;
+import com.ib.client.OrderStatus;
+import com.ib.client.OrderType;
 import com.quant.finance.execution.client.IBClient;
-import com.quant.finance.execution.client.TelegramClient;
-import com.quant.finance.execution.dto.TVAlert;
+import com.quant.finance.execution.config.ApplicationProperties;
+import com.quant.finance.execution.dto.TVAlertDto;
+import com.quant.finance.execution.entity.AlertEntity;
+import com.quant.finance.execution.entity.OrderEntity;
+import com.quant.finance.execution.entity.StrategyEntity;
+import com.quant.finance.execution.enums.OrderAction;
+import com.quant.finance.execution.model.ContractData;
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,51 +25,120 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ExecutionService {
 
-  private final DiscordClient discordClient;
-  private final TelegramClient telegramClient;
-  private final IBClient ibClient = IBClient.getInstance();
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final NotificationService notificationService;
+  private final IBClient ibClient;
+  private final ApplicationProperties properties;
+  private final StrategyService strategyService;
+  private final TradeService tradeService;
+  private final EWrapperImpl eWrapper;
+  private final ContractService contractService;
+  private final PositionService positionService;
+  private final AlertService alertService;
 
-  public void executeStrategy(TVAlert alert) {
-    //DiscordMessage message = new DiscordMessage("Execution Engine", alert.toString());
-    //discordClient.notify(message);
+  public void executeStrategy(TVAlertDto tvAlertDto) {
+    notificationService.notify(tvAlertDto);
+    AlertEntity alert = alertService.save(tvAlertDto);
 
-    //ibClient.connect();
-
-    try {
-      telegramClient.sendMessage("8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA", "1014578999",
-          convertToJson(alert));
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
+    Optional<StrategyEntity> strategy = checkStrategy(alert.getStrategy());
+    if (strategy.isEmpty()) {
+      return;
     }
 
-    try {
-      Thread.sleep(0); // wait for nextValidId
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    // ===== Contract =====
-    Contract contract = new Contract();
-    contract.symbol("AAPL");
-    contract.secType("STK");
-    contract.currency("USD");
-    contract.exchange("SMART");
-    contract.primaryExch("NASDAQ");
-
-    // ===== Order =====
-    Order order = new Order();
-    order.action("BUY");
-    order.orderType("MKT");
-    order.totalQuantity(Decimal.get(1L));
-
+    //ibClient.getMarketData(contract);
+    //ibClient.getContractDetails(IBClient.getNextOrderId(), contract);
+    //eWrapper.getEClientSocket().reqPositions();
     //ibClient.placeOrder(contract, order);
-    //ibClient.getOpenOrders();
+
+
+    Map<String, ContractData> positions = null;
+    try {
+      positions = positionService.requestPositions().get();
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+
+    Double quantity =
+        positions.getOrDefault(alert.getSymbol(), ContractData.builder().quantity(0d).build())
+            .getQuantity();
+
+    if (quantity > 0 && OrderAction.BUY.equals(alert.getAction())) {
+      log.error("Can't buy existing symbol: {}, action: {}, quantity: {}", alert.getSymbol(),
+          alert.getAction(), quantity);
+      return;
+    } else if (quantity <= 0 && OrderAction.SELL.equals(alert.getAction())) {
+      log.error("Can't sell non existing symbol: {}, action: {}, quantity: {}", alert.getSymbol(),
+          alert.getAction(), quantity);
+      return;
+    }
+
+    contractService.requestContract(alert.getSymbol())
+        .thenAccept(contract -> {
+          tradeService.placeOrder(alert, strategy.get(), contract);
+        });
+
   }
 
-  public String convertToJson(TVAlert model) throws JsonProcessingException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    return objectMapper.writerWithDefaultPrettyPrinter()
-        .writeValueAsString(model);
+  /*
+  private void checkBeforeOrder(AlertEntity alert) {
+    Map<String, Decimal> positions = positionService.requestPositions().get();
+
+    Decimal quantity = positions.getOrDefault(alert.getSymbol(), Decimal.ZERO);
+
+    if (quantity.compareTo(Decimal.ZERO) > 0) {
+      log.warn("Already holding symbol: {}, quantity: {}", orderEntity.getSymbol(), quantity);
+      return;
+    }
+
+    contractService.requestContract(alert.getSymbol())
+        .thenAccept(contract -> {
+          orderService.placeOrder(orderEntity, contract);
+        });
+  }
+   */
+
+  public Optional<StrategyEntity> checkStrategy(String strategyName) {
+    Optional<StrategyEntity> optionalStrategy = strategyService.findStrategyByName(strategyName);
+
+    if (optionalStrategy.isEmpty()) {
+      log.error("Strategy: '{}' does not exits.", strategyName);
+      notificationService.notify(String.format("Strategy: '%s' does not exits.", strategyName));
+    }
+
+    return optionalStrategy;
+  }
+
+  public void makeMainOrder() {
+  }
+
+  public void makeStopOrder() {
+  }
+
+  public void makeTakeProfitOrder() {
+    // TODO: 09.02.26 need analysis
+  }
+
+  private Contract createContract(OrderEntity orderEntity) {
+    Contract contract = new Contract();
+    contract.secType("STK");
+    contract.currency(orderEntity.getCurrency());
+    contract.exchange("SMART");
+
+    return contract;
+  }
+
+  private Order createOrder(OrderEntity orderEntity) {
+    Order order = new Order();
+    order.orderType(orderEntity.getOrderType());
+    order.totalQuantity(Decimal.get(orderEntity.getQuantity()));
+
+    return order;
+  }
+
+  private BigDecimal calculateLimitPrice() {
+    return null;
+  }
+
+  private BigDecimal calculateStopPrice() {
+    return null;
   }
 }

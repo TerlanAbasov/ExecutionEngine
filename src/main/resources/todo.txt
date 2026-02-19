@@ -1,0 +1,11 @@
+- prod credentials as env variables
+- reconnection job or command
+- stop and tp orders
+- risk management
+- chatbot commandline integration
+- checker jobs
+- table relations
+- AI integrations
+- add comission to order table
+
+-504, 1100, 2110

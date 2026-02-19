@@ -1,23 +1,19 @@
-package com.quant.finance.executionengine;
+package com.quant.finance.execution;
 
 import com.quant.finance.execution.client.DiscordClient;
-import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.client.TelegramClient;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.cloud.openfeign.FeignAutoConfiguration;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
+@SpringBootApplication
 @EnableFeignClients(clients = {DiscordClient.class, TelegramClient.class})
-@SpringBootApplication(scanBasePackages = "com.quant.finance.execution")
 @Slf4j
 public class ExecutionEngineApplication {
 
@@ -26,7 +22,6 @@ public class ExecutionEngineApplication {
     SpringApplication app = new SpringApplication(ExecutionEngineApplication.class);
     Environment env = app.run(args).getEnvironment();
     logApplicationStartup(env);
-    IBClient.getInstance();
   }
 
   private static void logApplicationStartup(Environment env) {

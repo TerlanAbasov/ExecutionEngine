@@ -10,8 +10,8 @@ spring:
         name: ExecutionEngine
     datasource:
         url: jdbc:postgresql://127.0.0.1:5432/quant
-        username: ${QUANT_ENGINE_USER}
-        password: ${QUANT_ENGINE_PASSWORD}
+        username: 'engine'
+        password: 'engine2026'
     jpa:
         open-in-view: false
         show-sql: false
@@ -34,10 +34,10 @@ application:
             chatId: '1014578999'
             enabled: false
         gateway:
-            host: 128.140.74.222
+            host: 127.0.0.1
             port: 7497
-            id: 2
+            id: 1
     contract:
-        count: 1
+        count: 100
     account:
         id: DU8704817

@@ -1,0 +1,77 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 20260207-create-alert-table
+            author: Tarlan Abasov
+            changes:
+                -   createTable:
+                        tableName: alert
+                        columns:
+                            -   column:
+                                    name: id
+                                    type: BIGINT
+                                    autoIncrement: true
+                                    constraints:
+                                        primaryKey: true
+                                        nullable: false
+                            -   column:
+                                    name: symbol
+                                    type: VARCHAR(32)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: action
+                                    type: VARCHAR(20)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: strategy
+                                    type: VARCHAR(200)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: exchange
+                                    type: VARCHAR(50)
+                            -   column:
+                                    name: interval
+                                    type: INT
+                            -   column:
+                                    name: volume
+                                    type: INT
+                            -   column:
+                                    name: quote
+                                    type: VARCHAR(10)
+                            -   column:
+                                    name: open
+                                    type: NUMERIC(15,2)
+                            -   column:
+                                    name: close
+                                    type: NUMERIC(15,2)
+                            -   column:
+                                    name: low
+                                    type: NUMERIC(15,2)
+                            -   column:
+                                    name: high
+                                    type: NUMERIC(15,2)
+                            -   column:
+                                    name: bar_time
+                                    type: TIMESTAMP
+                            -   column:
+                                    name: generated_time
+                                    type: TIMESTAMP
+                            -   column:
+                                    name: created_at
+                                    type: TIMESTAMP
+                                    defaultValueComputed: CURRENT_TIMESTAMP
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: updated_at
+                                    type: TIMESTAMP
+                                    defaultValueComputed: CURRENT_TIMESTAMP
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: json
+                                    type: VARCHAR(2000)
+                                    constraints:
+                                        nullable: false

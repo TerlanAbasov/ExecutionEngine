@@ -10,34 +10,53 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ApplicationProperties {
 
-    private final Client client = new Client();
+  private final Client client = new Client();
+  private final Contract contract = new Contract();
+  private final Account account = new Account();
 
-    @Getter
+  @Getter
+  @Setter
+  public static class Client {
+
+    private final Telegram telegram = new Telegram();
+    private final Gateway gateway = new Gateway();
+
     @Setter
-    public static class Client {
+    @Getter
+    public static class Telegram {
 
-        private final ExperianPco experianPco = new ExperianPco();
-        private final ExperianPcoBulk experianPcoBulk = new ExperianPcoBulk();
-
-
-        @Setter
-        @Getter
-        public static class ExperianPco {
-
-            private String username;
-            private String password;
-
-        }
-
-        @Setter
-        @Getter
-        public static class ExperianPcoBulk {
-
-            private String username;
-            private String password;
-
-        }
+      private String url;
+      private String token;
+      private String chatId;
+      private boolean enabled;
 
     }
+
+    @Setter
+    @Getter
+    public static class Gateway {
+      private String host;
+      private int port;
+      private int id;
+
+    }
+
+  }
+
+  @Setter
+  @Getter
+  public static class Contract {
+
+    private int count;
+
+  }
+
+  @Setter
+  @Getter
+  public static class Account {
+
+    private String id;
+
+  }
 
 }

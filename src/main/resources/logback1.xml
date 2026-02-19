@@ -1,34 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <!-- Import Spring Boot's default console appender -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <!-- Console appender -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>
-                %d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [%thread] %logger{36}.%method:%line : %msg%n%throwable
-            </pattern>
-        </encoder>
-    </appender>
-
-    <!-- File appender -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover and compression of log files -->
             <fileNamePattern>logs/app.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <!-- keep 7 days' worth of history -->
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
+            <!-- Use Spring Boot's default file log pattern -->
             <pattern>
                 %d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [%thread] %logger{36}.%method:%line : %msg%n%throwable
             </pattern>
         </encoder>
     </appender>
 
+    <!-- Configure the root logger to use both CONSOLE (from base.xml) and FILE appender -->
     <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
+        <appender-ref ref="FILE" />
     </root>
 
+    <!-- Optionally, set specific log levels for certain packages -->
     <logger name="com.quant.finance" level="DEBUG"/>
 
 </configuration>

@@ -1,0 +1,46 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 20260208-create-order-table-indexes
+            author: Tarlan Abasov
+            changes:
+                -   createIndex:
+                        indexName: idx_order_strategy_id
+                        tableName: order
+                        columns:
+                            -   column:
+                                    name: strategy_id
+
+                -   createIndex:
+                        indexName: idx_order_alert_id
+                        tableName: order
+                        columns:
+                            -   column:
+                                    name: alert_id
+
+                -   createIndex:
+                        indexName: idx_order_status
+                        tableName: order
+                        columns:
+                            -   column:
+                                    name: status
+
+                -   createIndex:
+                        indexName: idx_order_symbol
+                        tableName: order
+                        columns:
+                            -   column:
+                                    name: symbol
+
+                -   createIndex:
+                        indexName: idx_order_contract_id
+                        tableName: order
+                        columns:
+                            -   column:
+                                    name: contract_id
+
+                -   createIndex:
+                        indexName: idx_order_created_at
+                        tableName: order
+                        columns:
+                            -   column:
+                                    name: created_at

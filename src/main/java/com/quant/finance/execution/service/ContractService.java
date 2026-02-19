@@ -1,0 +1,56 @@
+package com.quant.finance.execution.service;
+
+import com.ib.client.Contract;
+import com.ib.client.ContractDetails;
+import com.ib.client.Types;
+import com.quant.finance.execution.util.EngineUtil;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+
+@Service
+@Slf4j
+public class ContractService {
+  private final EWrapperImpl eWrapper;
+
+  public ContractService(@Lazy EWrapperImpl eWrapper) {
+    this.eWrapper = eWrapper;
+  }
+
+  private final Map<Integer, CompletableFuture<Contract>> contractMap =
+      new ConcurrentHashMap<>();
+
+  public CompletableFuture<Contract> requestContract(String symbol) {
+
+    int requestId = EngineUtil.nextRequestId();
+
+    CompletableFuture<Contract> contractFuture = new CompletableFuture<>();
+    contractMap.put(requestId, contractFuture);
+
+    Contract contract = new Contract();
+    contract.symbol(symbol);
+    contract.secType(Types.SecType.STK);
+    contract.exchange("SMART");
+
+    eWrapper.getEClientSocket().reqContractDetails(requestId, contract);
+
+    return contractFuture;
+  }
+
+  public void onContractDetails(int requestId, ContractDetails contractDetails) {
+    log.info("CONTRTACT DETAILS. RequestId: {},ContractDetails: {}", requestId,
+        contractDetails.toString());
+
+    CompletableFuture<Contract> future = contractMap.get(requestId);
+    if (future != null && !future.isDone()) {
+      future.complete(contractDetails.contract());
+    }
+  }
+
+  public void onContractDetailsEnd(int requestId) {
+    contractMap.remove(requestId);
+  }
+}

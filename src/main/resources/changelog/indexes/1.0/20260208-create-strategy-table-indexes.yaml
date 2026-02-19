@@ -1,0 +1,27 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 20260208-create-strategy-indexes
+            author: Tarlan Abasov
+            changes:
+                -   createIndex:
+                        indexName: idx_strategy_name
+                        tableName: strategy
+                        unique: true
+                        columns:
+                            -   column:
+                                    name: name
+
+                -   createIndex:
+                        indexName: idx_strategy_type
+                        tableName: strategy
+                        columns:
+                            -   column:
+                                    name: type
+
+                -   createIndex:
+                        indexName: idx_strategy_created_at
+                        tableName: strategy
+                        columns:
+                            -   column:
+                                    name: created_at
+                                    descending: true

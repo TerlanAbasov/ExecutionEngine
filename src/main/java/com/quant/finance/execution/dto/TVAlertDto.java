@@ -3,8 +3,11 @@ package com.quant.finance.execution.dto;
 import lombok.Data;
 
 @Data
-public class TVAlert {
+public class TVAlertDto {
   private String ticker;
+  private String buy;
+  private String sell;
+  private String strategy;
   private String exchange;
   private String interval;
   private String time;
@@ -16,8 +19,6 @@ public class TVAlert {
   private String open;
   private String quote;
   private String base;
-  private String buy;
-  private String sell;
   private String plot0;
   private String plot1;
 }

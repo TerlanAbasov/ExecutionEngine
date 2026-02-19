@@ -1,0 +1,53 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 20260207-create-alert-table-indexes
+            author: Tarlan Abasov
+            changes:
+                -   createIndex:
+                        indexName: idx_alert_symbol
+                        tableName: alert
+                        columns:
+                            -   column:
+                                    name: symbol
+
+                -   createIndex:
+                        indexName: idx_alert_action
+                        tableName: alert
+                        columns:
+                            -   column:
+                                    name: action
+
+                -   createIndex:
+                        indexName: idx_alert_created_at
+                        tableName: alert
+                        columns:
+                            -   column:
+                                    name: created_at
+                                    descending: true
+
+                -   createIndex:
+                        indexName: idx_alert_bar_time
+                        tableName: alert
+                        columns:
+                            -   column:
+                                    name: bar_time
+                                    descending: true
+
+                -   createIndex:
+                        indexName: idx_alert_symbol_action
+                        tableName: alert
+                        columns:
+                            -   column:
+                                    name: symbol
+                            -   column:
+                                    name: action
+
+                -   createIndex:
+                        indexName: idx_alert_symbol_created_at
+                        tableName: alert
+                        columns:
+                            -   column:
+                                    name: symbol
+                            -   column:
+                                    name: created_at
+                                    descending: true
