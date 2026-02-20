@@ -1,175 +1,214 @@
-2026-02-05T00:07:27.920+04:00  INFO 38846 --- [ExecutionEngine] [main] c.q.f.e.ExecutionEngineApplication       : Starting ExecutionEngineApplication using Java 21.0.10 with PID 38846 (/Users/tarlanabasov/home/development/business-risk/smem/ExecutionEngine/build/classes/java/main started by tarlanabasov in /Users/tarlanabasov/home/development/business-risk/smem/ExecutionEngine)
-2026-02-05T00:07:27.923+04:00 DEBUG 38846 --- [ExecutionEngine] [main] c.q.f.e.ExecutionEngineApplication       : Running with Spring Boot v4.0.0, Spring v7.0.1
-2026-02-05T00:07:27.924+04:00  INFO 38846 --- [ExecutionEngine] [main] c.q.f.e.ExecutionEngineApplication       : The following 1 profile is active: "local"
-2026-02-05T00:07:28.339+04:00  INFO 38846 --- [ExecutionEngine] [main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=146672b1-07d1-3399-9b62-a7fb5f2abb04
-2026-02-05T00:07:28.445+04:00  INFO 38846 --- [ExecutionEngine] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8081 (http)
-2026-02-05T00:07:28.451+04:00  INFO 38846 --- [ExecutionEngine] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-02-05T00:07:28.451+04:00  INFO 38846 --- [ExecutionEngine] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.14]
-2026-02-05T00:07:28.475+04:00  INFO 38846 --- [ExecutionEngine] [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 530 ms
-2026-02-05T00:07:28.642+04:00 ERROR 38846 --- [ExecutionEngine] [main] c.q.finance.execution.client.IBClient    : ERROR. orderId: -1, code: 502, msg: Couldn't connect to TWS. Confirm that "Enable ActiveX and Socket Clients" is enabled and connection port is the same as "Socket Port" on the TWS "Edit->Global Configuration...->API->Settings" menu. Live Trading ports: TWS: 7496; IB Gateway: 4001. Simulated Trading ports for new installations of version 954.1 or newer: TWS: 7497; IB Gateway: 4002
-2026-02-05T00:07:28.661+04:00  INFO 38846 --- [ExecutionEngine] [main] o.s.v.b.OptionalValidatorFactoryBean     : Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
-2026-02-05T00:07:28.844+04:00  INFO 38846 --- [ExecutionEngine] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
-2026-02-05T00:07:28.885+04:00  INFO 38846 --- [ExecutionEngine] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8081 (http) with context path '/'
-2026-02-05T00:07:28.893+04:00  INFO 38846 --- [ExecutionEngine] [main] c.q.f.e.ExecutionEngineApplication       : Started ExecutionEngineApplication in 1.144 seconds (process running for 1.73)
-2026-02-05T00:07:28.896+04:00  INFO 38846 --- [ExecutionEngine] [main] c.q.f.e.ExecutionEngineApplication       : Application 'ExecutionEngine' is running! Access URLs: Local: http://localhost:8081/ External: http://127.0.0.1:8081/ Profile(s): [local]
-2026-02-05T00:07:39.910+04:00  INFO 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-02-05T00:07:39.911+04:00  INFO 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-02-05T00:07:39.916+04:00  INFO 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 5 ms
-2026-02-05T00:07:39.976+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] ---> POST https://api.telegram.org/bot8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA/sendMessage?chat_id=1014578999&text=%7B%0A%20%20%22ticker%22%20%3A%20%22TSLR%22%2C%0A%20%20%22exchange%22%20%3A%20%22BATS%22%2C%0A%20%20%22interval%22%20%3A%20%2260%22%2C%0A%20%20%22time%22%20%3A%20%222026-01-30T10%3A00%3A00Z%22%2C%0A%20%20%22timenow%22%20%3A%20%222026-01-30T10%3A09%3A07Z%22%2C%0A%20%20%22volume%22%20%3A%20%2277%22%2C%0A%20%20%22close%22%20%3A%20%2227.59%22%2C%0A%20%20%22high%22%20%3A%20%2228.10%22%2C%0A%20%20%22low%22%20%3A%20%2227.59%22%2C%0A%20%20%22open%22%20%3A%20%2228.10%22%2C%0A%20%20%22quote%22%20%3A%20%22USD%22%2C%0A%20%20%22base%22%20%3A%20%22%22%2C%0A%20%20%22buy%22%20%3A%20%220%22%2C%0A%20%20%22sell%22%20%3A%20%221%22%2C%0A%20%20%22plot0%22%20%3A%20%220%22%2C%0A%20%20%22plot1%22%20%3A%20%221%22%0A%7D HTTP/1.1
-2026-02-05T00:07:39.976+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] Content-Length: 46
-2026-02-05T00:07:39.977+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] Content-Type: text/plain;charset=UTF-8
-2026-02-05T00:07:39.977+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] 
-2026-02-05T00:07:39.977+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] 8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA
-2026-02-05T00:07:39.977+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] ---> END HTTP (46-byte body)
-2026-02-05T00:07:40.297+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] <--- ERROR SocketException: Connection reset (320ms)
-2026-02-05T00:07:40.298+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] java.net.SocketException: Connection reset
-	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
-	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
-	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
-	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
-	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:489)
-	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:483)
-	at java.base/sun.security.ssl.SSLSocketInputRecord.decode(SSLSocketInputRecord.java:160)
-	at java.base/sun.security.ssl.SSLTransport.decode(SSLTransport.java:111)
-	at java.base/sun.security.ssl.SSLSocketImpl.decode(SSLSocketImpl.java:1506)
-	at java.base/sun.security.ssl.SSLSocketImpl.readHandshakeRecord(SSLSocketImpl.java:1421)
-	at java.base/sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:455)
-	at java.base/sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:426)
-	at java.base/sun.net.www.protocol.https.HttpsClient.afterConnect(HttpsClient.java:586)
-	at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:187)
-	at java.base/sun.net.www.protocol.http.HttpURLConnection.getOutputStream0(HttpURLConnection.java:1462)
-	at java.base/sun.net.www.protocol.http.HttpURLConnection.getOutputStream(HttpURLConnection.java:1433)
-	at java.base/sun.net.www.protocol.https.HttpsURLConnectionImpl.getOutputStream(HttpsURLConnectionImpl.java:219)
-	at feign.Client$Default.convertAndSend(Client.java:224)
-	at feign.Client$Default.execute(Client.java:109)
-	at feign.SynchronousMethodHandler.executeAndDecode(SynchronousMethodHandler.java:92)
-	at feign.SynchronousMethodHandler.invoke(SynchronousMethodHandler.java:53)
-	at feign.ReflectiveFeign$FeignInvocationHandler.invoke(ReflectiveFeign.java:104)
-	at jdk.proxy2/jdk.proxy2.$Proxy105.sendMessage(Unknown Source)
-	at com.quant.finance.execution.service.ExecutionService.executeStrategy(ExecutionService.java:33)
-	at com.quant.finance.execution.controller.AlertController.alert(AlertController.java:21)
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
-	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
-	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)
-	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934)
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853)
-	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86)
-	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
-	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
-	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
-	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:903)
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:649)
-	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
-	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:110)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
-	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
-	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
-	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
-	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
-	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
-	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
-	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
-	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
-	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
-	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
-	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
-	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
-	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-02-20T00:26:28.143+04:00 INFO  --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown.shutDownGracefully:54 : Commencing graceful shutdown. Waiting for active requests to complete
+2026-02-20T00:26:28.241+04:00 INFO  --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown.doShutdown:76 : Graceful shutdown complete
+2026-02-20T00:26:28.287+04:00 INFO  --- [SpringApplicationShutdownHook] c.q.f.e.service.NotificationService.notify:39 : Sending notification: Shutting down ExecutionEngine!
+2026-02-20T00:26:28.297+04:00 INFO  --- [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean.destroy:660 : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-02-20T00:26:28.327+04:00 INFO  --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource.close:349 : HikariPool-1 - Shutdown initiated...
+2026-02-20T00:26:28.332+04:00 INFO  --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource.close:351 : HikariPool-1 - Shutdown completed.
+2026-02-20T00:26:34.283+04:00 INFO  --- [main] c.q.f.e.ExecutionEngineApplication.logStarting:53 : Starting ExecutionEngineApplication using Java 21.0.10 with PID 83508 (/Users/tarlanabasov/home/development/quant/ExecutionEngine/build/classes/java/main started by tarlanabasov in /Users/tarlanabasov/home/development/quant/ExecutionEngine)
+2026-02-20T00:26:34.284+04:00 INFO  --- [main] c.q.f.e.ExecutionEngineApplication.logStartupProfileInfo:658 : The following 1 profile is active: "local"
+2026-02-20T00:26:34.881+04:00 INFO  --- [main] o.s.d.r.c.RepositoryConfigurationDelegate.registerRepositoriesIn:145 : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-02-20T00:26:34.911+04:00 INFO  --- [main] o.s.d.r.c.RepositoryConfigurationDelegate.registerRepositoriesIn:213 : Finished Spring Data repository scanning in 24 ms. Found 3 JPA repository interfaces.
+2026-02-20T00:26:34.992+04:00 INFO  --- [main] o.s.cloud.context.scope.GenericScope.setSerializationId:280 : BeanFactory id=b80de4b4-6cba-36c7-b7d0-6b1d19953aa4
+2026-02-20T00:26:35.197+04:00 INFO  --- [main] o.s.b.w.e.tomcat.TomcatWebServer.initialize:111 : Tomcat initialized with port 8081 (http)
+2026-02-20T00:26:35.207+04:00 INFO  --- [main] o.a.coyote.http11.Http11NioProtocol.log:168 : Initializing ProtocolHandler ["http-nio-8081"]
+2026-02-20T00:26:35.208+04:00 INFO  --- [main] o.a.catalina.core.StandardService.log:168 : Starting service [Tomcat]
+2026-02-20T00:26:35.208+04:00 INFO  --- [main] o.a.catalina.core.StandardEngine.log:168 : Starting Servlet engine: [Apache Tomcat/10.1.48]
+2026-02-20T00:26:35.239+04:00 INFO  --- [main] o.a.c.c.C.[Tomcat].[localhost].[/].log:168 : Initializing Spring embedded WebApplicationContext
+2026-02-20T00:26:35.239+04:00 INFO  --- [main] o.s.b.w.s.c.ServletWebServerApplicationContext.prepareWebApplicationContext:301 : Root WebApplicationContext: initialization completed in 931 ms
+2026-02-20T00:26:35.359+04:00 INFO  --- [main] com.zaxxer.hikari.HikariDataSource.getConnection:109 : HikariPool-1 - Starting...
+2026-02-20T00:26:35.422+04:00 INFO  --- [main] com.zaxxer.hikari.pool.HikariPool.checkFailFast:580 : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6cd66f6a
+2026-02-20T00:26:35.423+04:00 INFO  --- [main] com.zaxxer.hikari.HikariDataSource.getConnection:122 : HikariPool-1 - Start completed.
+2026-02-20T00:26:35.531+04:00 INFO  --- [main] liquibase.database.log:37 : Set default schema name to engine
+2026-02-20T00:26:35.605+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/tables/1.0/20260208-create-alert-table.yaml
+2026-02-20T00:26:35.729+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading from engine.databasechangelog
+2026-02-20T00:26:35.732+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/tables/1.0/20260208-create-order-table.yaml
+2026-02-20T00:26:35.737+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/tables/1.0/20260208-create-strategy-table.yaml
+2026-02-20T00:26:35.744+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/indexes/1.0/20260208-create-alert-table-indexes.yaml
+2026-02-20T00:26:35.746+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/indexes/1.0/20260208-create-order-table-indexes.yaml
+2026-02-20T00:26:35.748+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/indexes/1.0/20260208-create-strategy-table-indexes.yaml
+2026-02-20T00:26:35.784+04:00 INFO  --- [main] liquibase.ui.log:37 : Database is up to date, no changesets to execute
+2026-02-20T00:26:35.786+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading from engine.databasechangelog
+2026-02-20T00:26:35.792+04:00 INFO  --- [main] liquibase.util.log:37 : UPDATE SUMMARY
+2026-02-20T00:26:35.792+04:00 INFO  --- [main] liquibase.util.log:37 : Run:                          0
+2026-02-20T00:26:35.792+04:00 INFO  --- [main] liquibase.util.log:37 : Previously run:               6
+2026-02-20T00:26:35.792+04:00 INFO  --- [main] liquibase.util.log:37 : Filtered out:                 0
+2026-02-20T00:26:35.792+04:00 INFO  --- [main] liquibase.util.log:37 : -------------------------------
+2026-02-20T00:26:35.792+04:00 INFO  --- [main] liquibase.util.log:37 : Total change sets:            6
+2026-02-20T00:26:35.792+04:00 INFO  --- [main] liquibase.util.log:37 : Update summary generated
+2026-02-20T00:26:35.793+04:00 INFO  --- [main] liquibase.command.log:37 : Command execution complete
+2026-02-20T00:26:37.353+04:00 INFO  --- [main] o.h.jpa.internal.util.LogHelper.logPersistenceUnitInformation:31 : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-02-20T00:26:37.381+04:00 INFO  --- [main] org.hibernate.Version.logVersion:44 : HHH000412: Hibernate ORM core version 6.6.33.Final
+2026-02-20T00:26:37.397+04:00 INFO  --- [main] o.h.c.i.RegionFactoryInitiator.initiateService:50 : HHH000026: Second-level cache disabled
+2026-02-20T00:26:37.552+04:00 INFO  --- [main] o.s.o.j.p.SpringPersistenceUnitInfo.addTransformer:87 : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-02-20T00:26:37.602+04:00 INFO  --- [main] o.hibernate.orm.connections.pooling.logConnectionInfo:163 : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 18.1
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-02-20T00:26:38.309+04:00 INFO  --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator.initiateService:59 : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-02-20T00:26:38.409+04:00 INFO  --- [main] o.s.o.j.LocalContainerEntityManagerFactoryBean.buildNativeEntityManagerFactory:447 : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-02-20T00:26:39.016+04:00 WARN  --- [main] o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext.refresh:635 : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'IBClient' defined in file [/Users/tarlanabasov/home/development/quant/ExecutionEngine/build/classes/java/main/com/quant/finance/execution/client/IBClient.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'EWrapperImpl' defined in file [/Users/tarlanabasov/home/development/quant/ExecutionEngine/build/classes/java/main/com/quant/finance/execution/service/EWrapperImpl.class]: Unsatisfied dependency expressed through constructor parameter 6: Error creating bean with name 'IBErrorHandler' defined in file [/Users/tarlanabasov/home/development/quant/ExecutionEngine/build/classes/java/main/com/quant/finance/execution/error/IBErrorHandler.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'EWrapperImpl': Requested bean is currently in creation: Is there an unresolvable circular reference or an asynchronous initialization dependency?
+2026-02-20T00:26:39.017+04:00 INFO  --- [main] c.q.f.e.service.NotificationService.notify:39 : Sending notification: Shutting down ExecutionEngine!
+2026-02-20T00:26:39.019+04:00 WARN  --- [main] o.s.c.a.AnnotationConfigApplicationContext.doClose:1169 : Exception thrown from ApplicationListener handling ContextClosedEvent
+org.springframework.beans.factory.BeanCreationNotAllowedException: Error creating bean with name 'meterRegistryCloser': Singleton bean creation not allowed while singletons of this factory are in destruction (Do not request a bean from a BeanFactory in a destroy method implementation!)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:303)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207)
+	at org.springframework.context.event.AbstractApplicationEventMulticaster.retrieveApplicationListeners(AbstractApplicationEventMulticaster.java:267)
+	at org.springframework.context.event.AbstractApplicationEventMulticaster.getApplicationListeners(AbstractApplicationEventMulticaster.java:223)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:145)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:454)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:460)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:387)
+	at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1166)
+	at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1129)
+	at org.springframework.cloud.context.named.NamedContextFactory.destroy(NamedContextFactory.java:114)
+	at org.springframework.beans.factory.support.DisposableBeanAdapter.destroy(DisposableBeanAdapter.java:212)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroyBean(DefaultSingletonBeanRegistry.java:798)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingleton(DefaultSingletonBeanRegistry.java:748)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingleton(DefaultListableBeanFactory.java:1499)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingletons(DefaultSingletonBeanRegistry.java:707)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingletons(DefaultListableBeanFactory.java:1492)
+	at org.springframework.context.support.AbstractApplicationContext.destroyBeans(AbstractApplicationContext.java:1222)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:640)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318)
+	at com.quant.finance.execution.ExecutionEngineApplication.main(ExecutionEngineApplication.java:23)
+2026-02-20T00:26:39.022+04:00 WARN  --- [main] o.s.c.a.AnnotationConfigApplicationContext.doClose:1169 : Exception thrown from ApplicationListener handling ContextClosedEvent
+org.springframework.beans.factory.BeanCreationNotAllowedException: Error creating bean with name 'meterRegistryCloser': Singleton bean creation not allowed while singletons of this factory are in destruction (Do not request a bean from a BeanFactory in a destroy method implementation!)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:303)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207)
+	at org.springframework.context.event.AbstractApplicationEventMulticaster.retrieveApplicationListeners(AbstractApplicationEventMulticaster.java:267)
+	at org.springframework.context.event.AbstractApplicationEventMulticaster.getApplicationListeners(AbstractApplicationEventMulticaster.java:223)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:145)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:454)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:460)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:387)
+	at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1166)
+	at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1129)
+	at org.springframework.cloud.context.named.NamedContextFactory.destroy(NamedContextFactory.java:114)
+	at org.springframework.beans.factory.support.DisposableBeanAdapter.destroy(DisposableBeanAdapter.java:212)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroyBean(DefaultSingletonBeanRegistry.java:798)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingleton(DefaultSingletonBeanRegistry.java:748)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingleton(DefaultListableBeanFactory.java:1499)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingletons(DefaultSingletonBeanRegistry.java:707)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingletons(DefaultListableBeanFactory.java:1492)
+	at org.springframework.context.support.AbstractApplicationContext.destroyBeans(AbstractApplicationContext.java:1222)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:640)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318)
+	at com.quant.finance.execution.ExecutionEngineApplication.main(ExecutionEngineApplication.java:23)
+2026-02-20T00:26:39.023+04:00 INFO  --- [main] o.s.o.j.LocalContainerEntityManagerFactoryBean.destroy:660 : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-02-20T00:26:39.024+04:00 INFO  --- [main] com.zaxxer.hikari.HikariDataSource.close:349 : HikariPool-1 - Shutdown initiated...
+2026-02-20T00:26:39.025+04:00 INFO  --- [main] com.zaxxer.hikari.HikariDataSource.close:351 : HikariPool-1 - Shutdown completed.
+2026-02-20T00:26:39.028+04:00 INFO  --- [main] o.a.catalina.core.StandardService.log:168 : Stopping service [Tomcat]
+2026-02-20T00:26:39.041+04:00 INFO  --- [main] o.s.b.a.l.ConditionEvaluationReportLogger.logMessage:82 : 
 
-2026-02-05T00:07:40.298+04:00 DEBUG 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] c.q.f.execution.client.TelegramClient    : [TelegramClient#sendMessage] <--- END ERROR
-2026-02-05T00:07:40.300+04:00 ERROR 38846 --- [ExecutionEngine] [http-nio-8081-exec-1] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: feign.RetryableException: Connection reset executing POST https://api.telegram.org/bot8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA/sendMessage?chat_id=1014578999&text=%7B%0A%20%20%22ticker%22%20%3A%20%22TSLR%22%2C%0A%20%20%22exchange%22%20%3A%20%22BATS%22%2C%0A%20%20%22interval%22%20%3A%20%2260%22%2C%0A%20%20%22time%22%20%3A%20%222026-01-30T10%3A00%3A00Z%22%2C%0A%20%20%22timenow%22%20%3A%20%222026-01-30T10%3A09%3A07Z%22%2C%0A%20%20%22volume%22%20%3A%20%2277%22%2C%0A%20%20%22close%22%20%3A%20%2227.59%22%2C%0A%20%20%22high%22%20%3A%20%2228.10%22%2C%0A%20%20%22low%22%20%3A%20%2227.59%22%2C%0A%20%20%22open%22%20%3A%20%2228.10%22%2C%0A%20%20%22quote%22%20%3A%20%22USD%22%2C%0A%20%20%22base%22%20%3A%20%22%22%2C%0A%20%20%22buy%22%20%3A%20%220%22%2C%0A%20%20%22sell%22%20%3A%20%221%22%2C%0A%20%20%22plot0%22%20%3A%20%220%22%2C%0A%20%20%22plot1%22%20%3A%20%221%22%0A%7D] with root cause
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-02-20T00:26:39.056+04:00 ERROR --- [main] o.s.b.d.LoggingFailureAnalysisReporter.report:40 : 
 
-java.net.SocketException: Connection reset
-	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
-	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
-	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
-	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
-	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:489)
-	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:483)
-	at java.base/sun.security.ssl.SSLSocketInputRecord.decode(SSLSocketInputRecord.java:160)
-	at java.base/sun.security.ssl.SSLTransport.decode(SSLTransport.java:111)
-	at java.base/sun.security.ssl.SSLSocketImpl.decode(SSLSocketImpl.java:1506)
-	at java.base/sun.security.ssl.SSLSocketImpl.readHandshakeRecord(SSLSocketImpl.java:1421)
-	at java.base/sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:455)
-	at java.base/sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:426)
-	at java.base/sun.net.www.protocol.https.HttpsClient.afterConnect(HttpsClient.java:586)
-	at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:187)
-	at java.base/sun.net.www.protocol.http.HttpURLConnection.getOutputStream0(HttpURLConnection.java:1462)
-	at java.base/sun.net.www.protocol.http.HttpURLConnection.getOutputStream(HttpURLConnection.java:1433)
-	at java.base/sun.net.www.protocol.https.HttpsURLConnectionImpl.getOutputStream(HttpsURLConnectionImpl.java:219)
-	at feign.Client$Default.convertAndSend(Client.java:224)
-	at feign.Client$Default.execute(Client.java:109)
-	at feign.SynchronousMethodHandler.executeAndDecode(SynchronousMethodHandler.java:92)
-	at feign.SynchronousMethodHandler.invoke(SynchronousMethodHandler.java:53)
-	at feign.ReflectiveFeign$FeignInvocationHandler.invoke(ReflectiveFeign.java:104)
-	at jdk.proxy2/jdk.proxy2.$Proxy105.sendMessage(Unknown Source)
-	at com.quant.finance.execution.service.ExecutionService.executeStrategy(ExecutionService.java:33)
-	at com.quant.finance.execution.controller.AlertController.alert(AlertController.java:21)
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
-	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258)
-	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)
-	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934)
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853)
-	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86)
-	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
-	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866)
-	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1003)
-	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:903)
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:649)
-	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874)
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
-	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:110)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
-	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
-	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
-	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
-	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
-	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
-	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
-	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
-	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
-	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
-	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
-	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
-	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
-	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
-	at java.base/java.lang.Thread.run(Thread.java:1583)
+***************************
+APPLICATION FAILED TO START
+***************************
 
-2026-02-05T00:07:48.876+04:00  INFO 38846 --- [ExecutionEngine] [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
-2026-02-05T00:07:48.884+04:00  INFO 38846 --- [ExecutionEngine] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+Description:
+
+The dependencies of some of the beans in the application context form a cycle:
+
+   IBClient defined in file [/Users/tarlanabasov/home/development/quant/ExecutionEngine/build/classes/java/main/com/quant/finance/execution/client/IBClient.class]
+┌─────┐
+|  EWrapperImpl defined in file [/Users/tarlanabasov/home/development/quant/ExecutionEngine/build/classes/java/main/com/quant/finance/execution/service/EWrapperImpl.class]
+↑     ↓
+|  IBErrorHandler defined in file [/Users/tarlanabasov/home/development/quant/ExecutionEngine/build/classes/java/main/com/quant/finance/execution/error/IBErrorHandler.class]
+└─────┘
+
+
+Action:
+
+Relying upon circular references is discouraged and they are prohibited by default. Update your application to remove the dependency cycle between beans. As a last resort, it may be possible to break the cycle automatically by setting spring.main.allow-circular-references to true.
+
+2026-02-20T00:26:52.763+04:00 INFO  --- [main] c.q.f.e.ExecutionEngineApplication.logStarting:53 : Starting ExecutionEngineApplication using Java 21.0.10 with PID 83552 (/Users/tarlanabasov/home/development/quant/ExecutionEngine/build/classes/java/main started by tarlanabasov in /Users/tarlanabasov/home/development/quant/ExecutionEngine)
+2026-02-20T00:26:52.764+04:00 INFO  --- [main] c.q.f.e.ExecutionEngineApplication.logStartupProfileInfo:658 : The following 1 profile is active: "local"
+2026-02-20T00:26:53.343+04:00 INFO  --- [main] o.s.d.r.c.RepositoryConfigurationDelegate.registerRepositoriesIn:145 : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-02-20T00:26:53.371+04:00 INFO  --- [main] o.s.d.r.c.RepositoryConfigurationDelegate.registerRepositoriesIn:213 : Finished Spring Data repository scanning in 23 ms. Found 3 JPA repository interfaces.
+2026-02-20T00:26:53.449+04:00 INFO  --- [main] o.s.cloud.context.scope.GenericScope.setSerializationId:280 : BeanFactory id=b80de4b4-6cba-36c7-b7d0-6b1d19953aa4
+2026-02-20T00:26:53.647+04:00 INFO  --- [main] o.s.b.w.e.tomcat.TomcatWebServer.initialize:111 : Tomcat initialized with port 8081 (http)
+2026-02-20T00:26:53.658+04:00 INFO  --- [main] o.a.coyote.http11.Http11NioProtocol.log:168 : Initializing ProtocolHandler ["http-nio-8081"]
+2026-02-20T00:26:53.659+04:00 INFO  --- [main] o.a.catalina.core.StandardService.log:168 : Starting service [Tomcat]
+2026-02-20T00:26:53.659+04:00 INFO  --- [main] o.a.catalina.core.StandardEngine.log:168 : Starting Servlet engine: [Apache Tomcat/10.1.48]
+2026-02-20T00:26:53.687+04:00 INFO  --- [main] o.a.c.c.C.[Tomcat].[localhost].[/].log:168 : Initializing Spring embedded WebApplicationContext
+2026-02-20T00:26:53.687+04:00 INFO  --- [main] o.s.b.w.s.c.ServletWebServerApplicationContext.prepareWebApplicationContext:301 : Root WebApplicationContext: initialization completed in 901 ms
+2026-02-20T00:26:53.813+04:00 INFO  --- [main] com.zaxxer.hikari.HikariDataSource.getConnection:109 : HikariPool-1 - Starting...
+2026-02-20T00:26:53.875+04:00 INFO  --- [main] com.zaxxer.hikari.pool.HikariPool.checkFailFast:580 : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@56c6d515
+2026-02-20T00:26:53.876+04:00 INFO  --- [main] com.zaxxer.hikari.HikariDataSource.getConnection:122 : HikariPool-1 - Start completed.
+2026-02-20T00:26:53.964+04:00 INFO  --- [main] liquibase.database.log:37 : Set default schema name to engine
+2026-02-20T00:26:54.029+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/tables/1.0/20260208-create-alert-table.yaml
+2026-02-20T00:26:54.136+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading from engine.databasechangelog
+2026-02-20T00:26:54.139+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/tables/1.0/20260208-create-order-table.yaml
+2026-02-20T00:26:54.143+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/tables/1.0/20260208-create-strategy-table.yaml
+2026-02-20T00:26:54.150+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/indexes/1.0/20260208-create-alert-table-indexes.yaml
+2026-02-20T00:26:54.153+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/indexes/1.0/20260208-create-order-table-indexes.yaml
+2026-02-20T00:26:54.155+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading resource: changelog/indexes/1.0/20260208-create-strategy-table-indexes.yaml
+2026-02-20T00:26:54.188+04:00 INFO  --- [main] liquibase.ui.log:37 : Database is up to date, no changesets to execute
+2026-02-20T00:26:54.189+04:00 INFO  --- [main] liquibase.changelog.log:37 : Reading from engine.databasechangelog
+2026-02-20T00:26:54.193+04:00 INFO  --- [main] liquibase.util.log:37 : UPDATE SUMMARY
+2026-02-20T00:26:54.193+04:00 INFO  --- [main] liquibase.util.log:37 : Run:                          0
+2026-02-20T00:26:54.193+04:00 INFO  --- [main] liquibase.util.log:37 : Previously run:               6
+2026-02-20T00:26:54.194+04:00 INFO  --- [main] liquibase.util.log:37 : Filtered out:                 0
+2026-02-20T00:26:54.194+04:00 INFO  --- [main] liquibase.util.log:37 : -------------------------------
+2026-02-20T00:26:54.194+04:00 INFO  --- [main] liquibase.util.log:37 : Total change sets:            6
+2026-02-20T00:26:54.194+04:00 INFO  --- [main] liquibase.util.log:37 : Update summary generated
+2026-02-20T00:26:54.194+04:00 INFO  --- [main] liquibase.command.log:37 : Command execution complete
+2026-02-20T00:26:55.626+04:00 INFO  --- [main] o.h.jpa.internal.util.LogHelper.logPersistenceUnitInformation:31 : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-02-20T00:26:55.656+04:00 INFO  --- [main] org.hibernate.Version.logVersion:44 : HHH000412: Hibernate ORM core version 6.6.33.Final
+2026-02-20T00:26:55.673+04:00 INFO  --- [main] o.h.c.i.RegionFactoryInitiator.initiateService:50 : HHH000026: Second-level cache disabled
+2026-02-20T00:26:55.815+04:00 INFO  --- [main] o.s.o.j.p.SpringPersistenceUnitInfo.addTransformer:87 : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-02-20T00:26:55.866+04:00 INFO  --- [main] o.hibernate.orm.connections.pooling.logConnectionInfo:163 : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 18.1
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-02-20T00:26:56.308+04:00 INFO  --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator.initiateService:59 : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-02-20T00:26:56.337+04:00 INFO  --- [main] o.s.o.j.LocalContainerEntityManagerFactoryBean.buildNativeEntityManagerFactory:447 : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-02-20T00:26:56.659+04:00 INFO  --- [main] c.q.f.execution.service.EWrapperImpl.makeConnection:66 : Connecting to 128.140.74.222:7497
+2026-02-20T00:27:00.778+04:00 INFO  --- [main] c.q.f.execution.service.EWrapperImpl.makeConnection:75 : Connected to 128.140.74.222:7497
+2026-02-20T00:27:00.852+04:00 INFO  --- [main] o.s.v.b.OptionalValidatorFactoryBean.afterPropertiesSet:48 : Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+2026-02-20T00:27:00.860+04:00 INFO  --- [Thread-5] c.q.f.execution.service.EWrapperImpl.nextValidId:162 : 🚀 Next valid orderId: 21
+2026-02-20T00:27:01.022+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2104, msg: Market data farm connection is OK:usfarm.nj
+2026-02-20T00:27:01.022+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2104, msg: Market data farm connection is OK:hfarm
+2026-02-20T00:27:01.022+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2104, msg: Market data farm connection is OK:jfarm
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2104, msg: Market data farm connection is OK:usfuture
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2104, msg: Market data farm connection is OK:usopt.nj
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2104, msg: Market data farm connection is OK:cashfarm
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2104, msg: Market data farm connection is OK:eufarmnj
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2104, msg: Market data farm connection is OK:usfarm
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2106, msg: HMDS data farm connection is OK:euhmds
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2106, msg: HMDS data farm connection is OK:fundfarm
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2106, msg: HMDS data farm connection is OK:ushmds
+2026-02-20T00:27:01.023+04:00 INFO  --- [Thread-5] c.q.f.execution.error.IBErrorHandler.error:21 : ERROR. id: -1, code: 2158, msg: Sec-def data farm connection is OK:secdefil
+2026-02-20T00:27:01.157+04:00 INFO  --- [main] o.s.b.a.e.web.EndpointLinksResolver.<init>:60 : Exposing 1 endpoint beneath base path '/actuator'
+2026-02-20T00:27:01.205+04:00 INFO  --- [main] o.a.coyote.http11.Http11NioProtocol.log:168 : Starting ProtocolHandler ["http-nio-8081"]
+2026-02-20T00:27:01.216+04:00 INFO  --- [main] o.s.b.w.e.tomcat.TomcatWebServer.start:243 : Tomcat started on port 8081 (http) with context path '/'
+2026-02-20T00:27:01.230+04:00 INFO  --- [main] c.q.f.e.ExecutionEngineApplication.logStarted:59 : Started ExecutionEngineApplication in 8.675 seconds (process running for 9.175)
+2026-02-20T00:27:01.234+04:00 INFO  --- [main] c.q.f.e.service.NotificationService.notify:39 : Sending notification: ExecutionEngine is running!
+2026-02-20T00:27:01.242+04:00 INFO  --- [main] c.q.f.e.ExecutionEngineApplication.logApplicationStartup:43 : Application 'ExecutionEngine' is running! Access URLs: Local: http://localhost:8081/ External: http://127.0.0.1:8081/ Profile(s): [local]
+2026-02-20T00:27:01.500+04:00 INFO  --- [RMI TCP Connection(3)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/].log:168 : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-20T00:27:01.501+04:00 INFO  --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet.initServletBean:532 : Initializing Servlet 'dispatcherServlet'
+2026-02-20T00:27:01.502+04:00 INFO  --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet.initServletBean:554 : Completed initialization in 1 ms
+2026-02-20T00:40:10.487+04:00 INFO  --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown.shutDownGracefully:54 : Commencing graceful shutdown. Waiting for active requests to complete
+2026-02-20T00:40:10.495+04:00 INFO  --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown.doShutdown:76 : Graceful shutdown complete
+2026-02-20T00:40:10.504+04:00 INFO  --- [SpringApplicationShutdownHook] c.q.f.e.service.NotificationService.notify:39 : Sending notification: Shutting down ExecutionEngine!
+2026-02-20T00:40:10.508+04:00 INFO  --- [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean.destroy:660 : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-02-20T00:40:10.513+04:00 INFO  --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource.close:349 : HikariPool-1 - Shutdown initiated...
+2026-02-20T00:40:10.515+04:00 INFO  --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource.close:351 : HikariPool-1 - Shutdown completed.

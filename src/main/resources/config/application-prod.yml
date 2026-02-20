@@ -10,8 +10,8 @@ spring:
         name: ExecutionEngine
     datasource:
         url: jdbc:postgresql://127.0.0.1:5432/quant
-        username: 'engine'
-        password: 'engine2026'
+        username: ${QUANT_ENGINE_USER}
+        password: ${QUANT_ENGINE_PASSWORD}
     jpa:
         open-in-view: false
         show-sql: false
