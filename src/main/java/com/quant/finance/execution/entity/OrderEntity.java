@@ -5,12 +5,15 @@ import static jakarta.persistence.EnumType.STRING;
 import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
 import com.quant.finance.execution.enums.OrderAction;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -66,6 +69,8 @@ public class OrderEntity {
   @Column(precision = 15, scale = 2)
   private BigDecimal averageFillPrice;
   @Column(precision = 15, scale = 2)
+  private BigDecimal realizedPnl;
+  @Column(precision = 15, scale = 2)
   private BigDecimal commission;
   private String errorMessage;
   private LocalDateTime submittedAt;
@@ -77,4 +82,6 @@ public class OrderEntity {
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
+  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private ExecutionEntity execution;
 }

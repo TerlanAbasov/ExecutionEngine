@@ -49,7 +49,9 @@ public class OrderService {
   }
 
   public OrderEntity createOrderEntity(AlertEntity alert, StrategyEntity strategy,
-                                        Contract contract) {
+                                       Contract contract) {
+    //todo get SELL quantity from BUY order
+
     return OrderEntity.builder()
         .brokerOrderId(String.valueOf(IBClient.getNextOrderId()))
         .alertId(alert.getId())
@@ -62,7 +64,8 @@ public class OrderService {
         .status(OrderStatus.ApiPending)
         .orderType(OrderType.MKT)
         .limitPrice(calculateLimitPrice())
-        .stopPrice(calculateStopPrice()).build();
+        .stopPrice(calculateStopPrice())
+        .build();
   }
 
   private BigDecimal calculateLimitPrice() {
@@ -75,8 +78,8 @@ public class OrderService {
 
   public void commissionAndFeesReport(CommissionAndFeesReport report) {
     log.info("COMMISSION AND FEES REPORT DETAILS. ExecutionId: {}, commissionAndFees: {}," +
-            " currency: {}, yield: {}, yieldRedemptionDate: {}", report.execId(),
-        report.commissionAndFees(), report.currency(), report.yield(),
+            " currency: {}, realizedPNL: {}, yield: {}, yieldRedemptionDate: {}", report.execId(),
+        report.commissionAndFees(), report.currency(), report.realizedPNL(), report.yield(),
         report.yieldRedemptionDate());
 
     Optional<OrderEntity> optionalOrder =
@@ -84,6 +87,7 @@ public class OrderService {
 
     if (optionalOrder.isPresent()) {
       optionalOrder.get().setCommission(BigDecimal.valueOf(report.commissionAndFees()));
+      optionalOrder.get().setRealizedPnl(BigDecimal.valueOf(report.realizedPNL()));
       repository.save(optionalOrder.get());
     } else {
       String message = String.format("Order not found with executionId: %s", report.execId());
@@ -113,6 +117,8 @@ public class OrderService {
       order.setStatus(OrderStatus.get(status));
       order.setFilledQuantity(filled.value().doubleValue());
       order.setAverageFillPrice(BigDecimal.valueOf(avgFillPrice));
+
+      adscasd fill price and quantity
 
       if (OrderStatus.get(status) == OrderStatus.PreSubmitted ||
           OrderStatus.get(status) == OrderStatus.Submitted) {

@@ -1,11 +1,12 @@
 - prod credentials as env variables
+- check max order amount according to strategy
 - reconnection job or command
 - stop and tp orders
+- order details table
 - risk management
 - chatbot commandline integration
 - checker jobs
 - table relations
+- check strategy status
+- new strategy types (alert, command, agent)
 - AI integrations
-- add comission to order table
-
--504, 1100, 2110

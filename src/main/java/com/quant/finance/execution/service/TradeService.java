@@ -34,6 +34,7 @@ public class TradeService {
     tradeOrder.orderType(orderEntity.getOrderType().name());
     tradeOrder.totalQuantity(Decimal.get(orderEntity.getQuantity()));
     tradeOrder.orderId(Integer.parseInt(orderEntity.getBrokerOrderId()));
+    //todo order with strategy amount not quantity
 
     //todo use existing contract
     Contract tradeContract = createContract(orderEntity);
@@ -46,6 +47,8 @@ public class TradeService {
     //todo is this line needed?
     ibClient.getContractDetails(EngineUtil.nextRequestId(), contract);
     ibClient.placeOrder(tradeContract, tradeOrder);
+
+    //todo LS and TP orders
   }
 
   private Contract createContract(OrderEntity orderEntity) {

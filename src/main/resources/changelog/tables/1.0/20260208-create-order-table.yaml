@@ -80,6 +80,9 @@ databaseChangeLog:
                                     name: average_fill_price
                                     type: NUMERIC(15,2)
                             -   column:
+                                    name: realized_pnl
+                                    type: NUMERIC(15,2)
+                            -   column:
                                     name: commission
                                     type: NUMERIC(15,2)
                             -   column:

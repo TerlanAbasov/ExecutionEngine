@@ -56,11 +56,10 @@ public class EWrapperImpl implements EWrapper {
   private final ContractService contractService;
   private final OrderService orderService;
   private final PnlService pnlService;
-  private final IBClient ibClient;
   private final IBErrorHandler ibErrorHandler;
 
   @PostConstruct
-  public void postConstruct() {
+  public void makeConnection() {
     EJavaSignal signal = new EJavaSignal();
     eClientSocket = new EClientSocket(this, signal);
 
@@ -89,7 +88,10 @@ public class EWrapperImpl implements EWrapper {
   }
 
   public EClientSocket getEClientSocket() {
-    //todo check is connected. if not reconnect
+    if (!eClientSocket.isConnected()) {
+      makeConnection();
+    }
+
     return eClientSocket;
   }
 
