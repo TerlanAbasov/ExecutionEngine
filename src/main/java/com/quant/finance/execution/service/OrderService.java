@@ -2,16 +2,12 @@ package com.quant.finance.execution.service;
 
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
-import com.ib.client.Execution;
 import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.entity.AlertEntity;
-import com.quant.finance.execution.entity.ExecutionEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
-import com.quant.finance.execution.error.OrderNotFoundException;
-import com.quant.finance.execution.repository.ExecutionRepository;
 import com.quant.finance.execution.repository.OrderRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -105,12 +101,15 @@ public class OrderService {
     }
 
     OrderEntity order = repository.findByBrokerOrderId(String.valueOf(orderId))
-        .orElseThrow(() -> {
-          String errorMessage = String.format("Order not found with id: %d", orderId);
-          log.error(errorMessage);
-          notificationService.notify(errorMessage);
-          return new OrderNotFoundException(errorMessage);
-        });
+        .orElse(null);
+
+    if (order == null) {
+      String errorMessage = String.format("Order not found with id: %d", orderId);
+      log.error(errorMessage);
+      notificationService.notify(errorMessage);
+
+      return;
+    }
 
     order.setStatus(OrderStatus.get(status));
     //order.getExecution().setPrice(BigDecimal.valueOf(avgFillPrice));

@@ -5,7 +5,6 @@ import com.ib.client.Contract;
 import com.ib.client.Execution;
 import com.quant.finance.execution.entity.ExecutionEntity;
 import com.quant.finance.execution.entity.OrderEntity;
-import com.quant.finance.execution.error.OrderNotFoundException;
 import com.quant.finance.execution.repository.ExecutionRepository;
 import com.quant.finance.execution.repository.OrderRepository;
 import java.math.BigDecimal;
@@ -22,19 +21,21 @@ public class ExecutionService {
   private final ExecutionRepository executionRepository;
   private final OrderRepository orderRepository;
 
-  public void execDetails(int i, Contract contract, Execution execution) {
+  public void execDetails(int id, Contract contract, Execution execution) {
     log.info("EXECUTION DETAILS. OrderId: {}, Price: {}, Shares: {}", execution.orderId(),
         execution.price(), execution.shares());
 
     OrderEntity order =
         orderRepository.findByBrokerOrderId(String.valueOf(execution.orderId()))
-            .orElseThrow(() -> {
-              String errorMessage =
-                  String.format("Order not found with id: %d", execution.orderId());
-              log.error(errorMessage);
-              notificationService.notify(errorMessage);
-              return new OrderNotFoundException(errorMessage);
-            });
+            .orElse(null);
+
+    if (order == null) {
+      String errorMessage = String.format("Order not found with id: %d", execution.orderId());
+      log.error(errorMessage);
+      notificationService.notify(errorMessage);
+
+      return;
+    }
 
     ExecutionEntity executionEntity = ExecutionEntity.builder()
         .execId(execution.execId())
@@ -44,7 +45,12 @@ public class ExecutionService {
         .build();
 
     executionEntity.setOrder(order);
-    executionRepository.save(executionEntity);
+
+    try {
+      executionRepository.save(executionEntity);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
 
     //order.addExecution(executionEntity);
     //orderRepository.save(order);
@@ -61,18 +67,35 @@ public class ExecutionService {
 
     ExecutionEntity executionEntity =
         executionRepository.findByExecId(String.valueOf(report.execId()))
-            .orElseThrow(() -> {
-              String errorMessage =
-                  String.format("Execution not found with execId: %s", report.execId());
-              log.error(errorMessage);
-              notificationService.notify(errorMessage);
-              return new OrderNotFoundException(errorMessage);
-            });
+            .orElse(null);
+
+    if (executionEntity == null) {
+      String errorMessage = String.format("Execution not found with execId: %s", report.execId());
+      log.error(errorMessage);
+      notificationService.notify(errorMessage);
+
+      return;
+    }
 
     executionEntity.setCommission(BigDecimal.valueOf(report.commissionAndFees()));
     executionEntity.setRealizedPnl(BigDecimal.valueOf(report.realizedPNL()));
+    executionEntity.setTotalAmount(calculateTotalAmount(executionEntity));
 
     executionRepository.save(executionEntity);
+  }
+
+  private BigDecimal calculateTotalAmount(ExecutionEntity execution) {
+    BigDecimal amount = BigDecimal.ZERO;
+
+    if (execution.getPrice() != null && execution.getFilledQuantity() != null) {
+      amount =
+          execution.getPrice().multiply(BigDecimal.valueOf(execution.getFilledQuantity()));
+    }
+
+    amount = execution.getCommission() != null ? amount.add(execution.getCommission()) :
+        amount;
+
+    return amount;
   }
 
   public void makeMainOrder() {

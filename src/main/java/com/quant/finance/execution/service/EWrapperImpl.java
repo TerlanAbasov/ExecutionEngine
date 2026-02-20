@@ -180,8 +180,8 @@ public class EWrapperImpl implements EWrapper {
   }
 
   @Override
-  public void execDetails(int i, Contract contract, Execution execution) {
-    executionService.execDetails(i, contract, execution);
+  public void execDetails(int id, Contract contract, Execution execution) {
+    executionService.execDetails(id, contract, execution);
   }
 
   @Override

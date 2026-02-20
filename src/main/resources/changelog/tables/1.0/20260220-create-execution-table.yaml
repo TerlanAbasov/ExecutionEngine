@@ -24,6 +24,8 @@ databaseChangeLog:
                             -   column:
                                     name: exec_id
                                     type: VARCHAR(255)
+                                    constraints:
+                                        unique: true
                             -   column:
                                     name: price
                                     type: NUMERIC(15,2)

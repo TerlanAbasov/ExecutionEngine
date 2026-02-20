@@ -21,7 +21,7 @@ public class NotificationService {
   public void notify(TVAlertDto alert) {
     try {
       String message = convertToJson(alert);
-      log.info("Sending notification: {}", message);
+      log.debug("Sending notification: {}", message);
 
       if (properties.getClient().getTelegram().isEnabled()) {
         telegramClient.sendMessage("8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA", "1014578999",
@@ -33,7 +33,7 @@ public class NotificationService {
   }
 
   public void notify(String message) {
-    log.info("Sending notification: {}", message);
+    log.debug("Sending notification: {}", message);
 
     if (properties.getClient().getTelegram().isEnabled()) {
       telegramClient.sendMessage("8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA", "1014578999",
