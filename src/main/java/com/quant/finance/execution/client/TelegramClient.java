@@ -30,7 +30,7 @@ public interface TelegramClient {
     @Bean
     public ErrorDecoder feignErrorDecoder() {
       return AnnotationErrorDecoder
-          .builderFor(DiscordClient.class)
+          .builderFor(TelegramClient.class)
           .build();
     }
   }

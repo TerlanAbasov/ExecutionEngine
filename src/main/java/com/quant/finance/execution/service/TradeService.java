@@ -22,43 +22,22 @@ public class TradeService {
   private final OrderRepository repository;
   private final IBClient ibClient;
   private final OrderService orderService;
-  private final StrategyService strategyService;
   private final EWrapperImpl eWrapper;
 
   @Transactional
   public void placeOrder(AlertEntity alert, StrategyEntity strategy, Contract contract) {
     OrderEntity orderEntity = orderService.createOrderEntity(alert, strategy, contract);
 
-    Order tradeOrder = new Order();
-    tradeOrder.action(orderEntity.getAction().name());
-    tradeOrder.orderType(orderEntity.getOrderType().name());
-    tradeOrder.totalQuantity(Decimal.get(orderEntity.getQuantity()));
-    tradeOrder.orderId(Integer.parseInt(orderEntity.getBrokerOrderId()));
+    Order ibOrder = new Order();
+    ibOrder.action(orderEntity.getAction().name());
+    ibOrder.orderType(orderEntity.getOrderType().name());
+    ibOrder.totalQuantity(Decimal.get(orderEntity.getQuantity()));
+    ibOrder.orderId(Integer.parseInt(orderEntity.getBrokerOrderId()));
     //todo order with strategy amount not quantity
 
-    //todo use existing contract
-    Contract tradeContract = createContract(orderEntity);
-    tradeContract.symbol(contract.symbol());
-
-    tradeContract.conid(contract.conid());
-    tradeContract.exchange(contract.exchange());
-
-    orderService.save(orderEntity);
-    //todo is this line needed?
-    ibClient.getContractDetails(EngineUtil.nextRequestId(), contract);
-    ibClient.placeOrder(tradeContract, tradeOrder);
+    ibClient.placeOrder(contract, ibOrder);
 
     //todo LS and TP orders
-  }
-
-  private Contract createContract(OrderEntity orderEntity) {
-    Contract contract = new Contract();
-    contract.secType("STK");
-    contract.currency(orderEntity.getCurrency());
-    contract.exchange("SMART");
-    contract.symbol(orderEntity.getSymbol());
-
-    return contract;
   }
 
   private BigDecimal calculateLimitPrice() {

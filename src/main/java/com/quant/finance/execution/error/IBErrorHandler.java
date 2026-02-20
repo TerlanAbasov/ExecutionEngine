@@ -16,9 +16,17 @@ public class IBErrorHandler {
     this.eWrapperimpl = eWrapperimpl;
   }
 
-  public void error(int id, long l, int code, String message, String s1) {
-    if (List.of(2104, 2158, 2106, 2107, 2108, 1101, 1102).contains(code)) {
-      log.info("ERROR. id: {}, code: {}, msg: {}", id, code, message);
+  private static boolean isConnectionOk = false;
+
+  public void handleError(int id, long l, int code, String message, String s1) {
+    if (List.of(2104, 2158, 2106).contains(code)) {
+      if (!isConnectionOk) {
+        log.info("Connections is OK!");
+      }
+
+      isConnectionOk = true;
+    } else if (List.of(2107, 2108, 1101, 1102).contains(code)) {
+      log.info("INFO. id: {}, code: {}, msg: {}", id, code, message);
     } else if (List.of(504, 1100, 2110).contains(code)) {
       log.error("CONNECTION ERROR. id: {}, code: {}, msg: {}", id, code, message);
       eWrapperimpl.makeConnection();

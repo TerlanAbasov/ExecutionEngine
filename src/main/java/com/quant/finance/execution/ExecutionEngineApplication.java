@@ -1,10 +1,8 @@
 package com.quant.finance.execution;
 
-import com.quant.finance.execution.client.DiscordClient;
 import com.quant.finance.execution.client.TelegramClient;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.SpringApplication;
@@ -13,7 +11,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.core.env.Environment;
 
 @SpringBootApplication
-@EnableFeignClients(clients = {DiscordClient.class, TelegramClient.class})
+@EnableFeignClients(clients = {TelegramClient.class})
 @Slf4j
 public class ExecutionEngineApplication {
 

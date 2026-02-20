@@ -1,0 +1,17 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 20260220-create-execution-table-indexes
+            author: Tarlan Abasov
+            changes:
+                -   createIndex:
+                        indexName: idx_execution_order_id
+                        tableName: execution
+                        columns:
+                            -   column:
+                                    name: order_id
+                -   createIndex:
+                        indexName: idx_execution_exec_id
+                        tableName: execution
+                        columns:
+                            -   column:
+                                    name: exec_id

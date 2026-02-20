@@ -1,6 +1,5 @@
 package com.quant.finance.execution.service;
 
-import com.ib.client.CommissionAndFeesReport;
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
 import com.ib.client.Execution;
@@ -8,8 +7,11 @@ import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.entity.AlertEntity;
+import com.quant.finance.execution.entity.ExecutionEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
+import com.quant.finance.execution.error.OrderNotFoundException;
+import com.quant.finance.execution.repository.ExecutionRepository;
 import com.quant.finance.execution.repository.OrderRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,7 +28,8 @@ public class OrderService {
   private final NotificationService notificationService;
   private final EWrapperImpl eWrapper;
 
-  public OrderService(OrderRepository repository, NotificationService notificationService,
+  public OrderService(OrderRepository repository,
+                      NotificationService notificationService,
                       @Lazy EWrapperImpl eWrapper) {
     this.repository = repository;
     this.notificationService = notificationService;
@@ -52,20 +55,31 @@ public class OrderService {
                                        Contract contract) {
     //todo get SELL quantity from BUY order
 
-    return OrderEntity.builder()
+    //ExecutionEntity execution = ExecutionEntity.builder()
+    //    .currency(alert.getQuote())
+    //    .quantity(strategy.getMaxPositionQuantity())
+    //    .build();
+
+    //todo remove exection
+
+    OrderEntity orderEntity = OrderEntity.builder()
         .brokerOrderId(String.valueOf(IBClient.getNextOrderId()))
-        .alertId(alert.getId())
-        .strategyId(strategy.getId())
+        .strategy(strategy)
         .symbol(alert.getSymbol())
         .contractId(contract.conid())
         .action(alert.getAction())
         .quantity(strategy.getMaxPositionQuantity())
-        .currency(alert.getQuote())
         .status(OrderStatus.ApiPending)
         .orderType(OrderType.MKT)
         .limitPrice(calculateLimitPrice())
         .stopPrice(calculateStopPrice())
         .build();
+
+    //alert.addOrder(orderEntity);
+    orderEntity.setAlert(alert);
+    orderEntity = repository.save(orderEntity);
+
+    return orderEntity;
   }
 
   private BigDecimal calculateLimitPrice() {
@@ -74,26 +88,6 @@ public class OrderService {
 
   private BigDecimal calculateStopPrice() {
     return null;
-  }
-
-  public void commissionAndFeesReport(CommissionAndFeesReport report) {
-    log.info("COMMISSION AND FEES REPORT DETAILS. ExecutionId: {}, commissionAndFees: {}," +
-            " currency: {}, realizedPNL: {}, yield: {}, yieldRedemptionDate: {}", report.execId(),
-        report.commissionAndFees(), report.currency(), report.realizedPNL(), report.yield(),
-        report.yieldRedemptionDate());
-
-    Optional<OrderEntity> optionalOrder =
-        repository.findByExecutionId(String.valueOf(report.execId()));
-
-    if (optionalOrder.isPresent()) {
-      optionalOrder.get().setCommission(BigDecimal.valueOf(report.commissionAndFees()));
-      optionalOrder.get().setRealizedPnl(BigDecimal.valueOf(report.realizedPNL()));
-      repository.save(optionalOrder.get());
-    } else {
-      String message = String.format("Order not found with executionId: %s", report.execId());
-      log.error(message);
-      notificationService.notify(message);
-    }
   }
 
   public void orderStatus(int orderId, String status, Decimal filled, Decimal remaining,
@@ -110,45 +104,34 @@ public class OrderService {
       notificationService.notify(message);
     }
 
-    Optional<OrderEntity> optionalOrder = repository.findByBrokerOrderId(String.valueOf(orderId));
+    OrderEntity order = repository.findByBrokerOrderId(String.valueOf(orderId))
+        .orElseThrow(() -> {
+          String errorMessage = String.format("Order not found with id: %d", orderId);
+          log.error(errorMessage);
+          notificationService.notify(errorMessage);
+          return new OrderNotFoundException(errorMessage);
+        });
 
-    if (optionalOrder.isPresent()) {
-      OrderEntity order = optionalOrder.get();
-      order.setStatus(OrderStatus.get(status));
-      order.setFilledQuantity(filled.value().doubleValue());
-      order.setAverageFillPrice(BigDecimal.valueOf(avgFillPrice));
+    order.setStatus(OrderStatus.get(status));
+    //order.getExecution().setPrice(BigDecimal.valueOf(avgFillPrice));
 
-      adscasd fill price and quantity
+    if (order.getQuantity() != filled.value().doubleValue()) {
+      log.error("Order Quantity Mismatch. Ordered quantity: {}, filled quantity: {}",
+          order.getQuantity(), filled.value().doubleValue());
+    }
 
-      if (OrderStatus.get(status) == OrderStatus.PreSubmitted ||
-          OrderStatus.get(status) == OrderStatus.Submitted) {
-        optionalOrder.get().setSubmittedAt(LocalDateTime.now());
-      } else if (OrderStatus.get(status) == OrderStatus.Filled) {
-        optionalOrder.get().setFilledAt(LocalDateTime.now());
-      }
+    setDateTimes(order, status);
 
-      repository.save(optionalOrder.get());
-    } else {
-      message = String.format("Order not found with id: %d", orderId);
-      log.error(message);
-      notificationService.notify(message);
+    repository.save(order);
+  }
+
+  private void setDateTimes(OrderEntity order, String status) {
+    if (OrderStatus.get(status) == OrderStatus.PreSubmitted ||
+        OrderStatus.get(status) == OrderStatus.Submitted) {
+      order.setSubmittedAt(LocalDateTime.now());
+    } else if (OrderStatus.get(status) == OrderStatus.Filled) {
+      order.setFilledAt(LocalDateTime.now());
     }
   }
 
-  public void execDetails(int i, Contract contract, Execution execution) {
-    log.info("EXECUTION DETAILS. OrderId: {}, Price: {}, Shares: {}", execution.orderId(),
-        execution.price(), execution.shares());
-
-    Optional<OrderEntity> optionalOrder =
-        repository.findByBrokerOrderId(String.valueOf(execution.orderId()));
-
-    if (optionalOrder.isPresent()) {
-      optionalOrder.get().setExecutionId(execution.execId());
-      repository.save(optionalOrder.get());
-    } else {
-      String message = String.format("Order not found with id: %d", execution.orderId());
-      log.error(message);
-      notificationService.notify(message);
-    }
-  }
 }

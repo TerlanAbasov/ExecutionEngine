@@ -10,13 +10,19 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,12 +44,17 @@ public class OrderEntity {
   private Long id;
   @Column(nullable = false, length = 255)
   private String brokerOrderId;
-  @Column(length = 255)
-  private String executionId;
-  @Column(nullable = false)
-  private Long alertId;
-  @Column(nullable = false)
-  private Integer strategyId;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "alert_id", nullable = false,
+      foreignKey = @ForeignKey(name = "fk_order_alert"))
+  private AlertEntity alert;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "strategy_id", nullable = false,
+      foreignKey = @ForeignKey(name = "fk_order_strategy"))
+  private StrategyEntity strategy;
+
   @Column(nullable = false, length = 32)
   private String symbol;
   private Integer contractId;
@@ -52,8 +63,6 @@ public class OrderEntity {
   private OrderAction action;
   @Column(nullable = false)
   private Double quantity;
-  @Column(nullable = false, length = 3)
-  private String currency;
   @Enumerated(STRING)
   @Column(nullable = false, length = 20)
   private OrderStatus status;
@@ -65,14 +74,6 @@ public class OrderEntity {
   private BigDecimal limitPrice;
   @Column(precision = 15, scale = 2)
   private BigDecimal stopPrice;
-  private Double filledQuantity;
-  @Column(precision = 15, scale = 2)
-  private BigDecimal averageFillPrice;
-  @Column(precision = 15, scale = 2)
-  private BigDecimal realizedPnl;
-  @Column(precision = 15, scale = 2)
-  private BigDecimal commission;
-  private String errorMessage;
   private LocalDateTime submittedAt;
   private LocalDateTime filledAt;
   @CreationTimestamp
@@ -81,7 +82,27 @@ public class OrderEntity {
   @UpdateTimestamp
   @Column(nullable = false)
   private LocalDateTime updatedAt;
+  private String errorMessage;
 
-  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-  private ExecutionEntity execution;
+  @OneToMany(mappedBy = "order", cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  @Setter(AccessLevel.NONE)
+  private List<ExecutionEntity> executions = new ArrayList<>();
+
+  public void addExecution(ExecutionEntity execution) {
+    if (execution == null) {
+      return;
+    }
+
+    this.executions.add(execution);
+    execution.setOrder(this);
+  }
+
+  //public void setAlert(AlertEntity alert) {
+  //  this.alert = alert;
+  //if (alert != null) {
+  //  alert.addOrder(this);
+  //}
+  //}
+
 }

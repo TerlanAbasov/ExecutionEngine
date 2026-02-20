@@ -1,56 +1,51 @@
 databaseChangeLog:
     -   changeSet:
-            id: 20260208-create-strategy-table
+            id: 20260220-create-execution-table
             author: Tarlan Abasov
             changes:
                 -   createTable:
-                        tableName: strategy
+                        tableName: execution
                         columns:
                             -   column:
                                     name: id
-                                    type: INT
+                                    type: BIGINT
                                     autoIncrement: true
                                     constraints:
                                         primaryKey: true
                                         nullable: false
                             -   column:
-                                    name: name
-                                    type: VARCHAR(200)
+                                    name: order_id
+                                    type: BIGINT
                                     constraints:
+                                        foreignKeyName: fk_execution_order
+                                        referencedTableName: order
+                                        referencedColumnNames: id
                                         nullable: false
                             -   column:
-                                    name: type
-                                    type: VARCHAR(20)
-                                    constraints:
-                                        nullable: false
+                                    name: exec_id
+                                    type: VARCHAR(255)
                             -   column:
-                                    name: position_type
-                                    type: VARCHAR(20)
-                                    constraints:
-                                        nullable: false
+                                    name: price
+                                    type: NUMERIC(15,2)
                             -   column:
-                                    name: max_position_quantity
+                                    name: filled_quantity
                                     type: DOUBLE PRECISION
                                     constraints:
                                         nullable: false
                             -   column:
-                                    name: max_position_amount
+                                    name: commission
                                     type: NUMERIC(15,2)
+                            -   column:
+                                    name: total_amount
+                                    type: NUMERIC(15,2)
+                            -   column:
+                                    name: realized_pnl
+                                    type: NUMERIC(15,2)
+                            -   column:
+                                    name: currency
+                                    type: VARCHAR(3)
                                     constraints:
                                         nullable: false
-                            -   column:
-                                    name: take_profit_percentage
-                                    type: INT
-                                    constraints:
-                                        nullable: false
-                            -   column:
-                                    name: stop_loss_percentage
-                                    type: INT
-                                    constraints:
-                                        nullable: false
-                            -   column:
-                                    name: description
-                                    type: VARCHAR(500)
                             -   column:
                                     name: created_at
                                     type: TIMESTAMP
@@ -63,3 +58,6 @@ databaseChangeLog:
                                     defaultValueComputed: CURRENT_TIMESTAMP
                                     constraints:
                                         nullable: false
+                            -   column:
+                                    name: error_message
+                                    type: TEXT

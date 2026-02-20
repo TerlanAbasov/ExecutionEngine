@@ -3,15 +3,21 @@ package com.quant.finance.execution.entity;
 import static jakarta.persistence.EnumType.STRING;
 
 import com.quant.finance.execution.enums.OrderAction;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -62,4 +68,16 @@ public class AlertEntity {
   @Column(nullable = false, length = 2000)
   private String json;
 
+  @OneToMany(mappedBy = "alert", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @Setter(AccessLevel.NONE)
+  private List<OrderEntity> orders = new ArrayList<>();
+
+  public void addOrder(OrderEntity order) {
+    if (order == null) {
+      return;
+    }
+
+    this.orders.add(order);
+    order.setAlert(this);
+  }
 }

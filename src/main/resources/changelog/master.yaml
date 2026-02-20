@@ -1,5 +1,17 @@
 databaseChangeLog:
-    -   includeAll:
-            path: changelog/tables/1.0
-    -   includeAll:
-            path: changelog/indexes/1.0
+    -   include:
+            file: changelog/tables/1.0/20260208-create-alert-table.yaml
+    -   include:
+            file: changelog/tables/1.0/20260208-create-strategy-table.yaml
+    -   include:
+            file: changelog/tables/1.0/20260208-create-order-table.yaml
+    -   include:
+            file: changelog/tables/1.0/20260220-create-execution-table.yaml
+    -   include:
+            file: changelog/indexes/1.0/20260208-create-alert-table-indexes.yaml
+    -   include:
+            file: changelog/indexes/1.0/20260208-create-strategy-table-indexes.yaml
+    -   include:
+            file: changelog/indexes/1.0/20260208-create-order-table-indexes.yaml
+    -   include:
+            file: changelog/indexes/1.0/20260220-create-execution-table-indexes.yaml

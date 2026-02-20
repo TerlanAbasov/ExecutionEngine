@@ -1,21 +1,14 @@
 package com.quant.finance.execution.service;
 
+import com.ib.client.CommissionAndFeesReport;
 import com.ib.client.Contract;
-import com.ib.client.Decimal;
-import com.ib.client.Order;
-import com.ib.client.OrderStatus;
-import com.ib.client.OrderType;
-import com.quant.finance.execution.client.IBClient;
-import com.quant.finance.execution.config.ApplicationProperties;
-import com.quant.finance.execution.dto.TVAlertDto;
-import com.quant.finance.execution.entity.AlertEntity;
+import com.ib.client.Execution;
+import com.quant.finance.execution.entity.ExecutionEntity;
 import com.quant.finance.execution.entity.OrderEntity;
-import com.quant.finance.execution.entity.StrategyEntity;
-import com.quant.finance.execution.enums.OrderAction;
-import com.quant.finance.execution.model.ContractData;
+import com.quant.finance.execution.error.OrderNotFoundException;
+import com.quant.finance.execution.repository.ExecutionRepository;
+import com.quant.finance.execution.repository.OrderRepository;
 import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,85 +19,60 @@ import org.springframework.stereotype.Service;
 public class ExecutionService {
 
   private final NotificationService notificationService;
-  private final IBClient ibClient;
-  private final ApplicationProperties properties;
-  private final StrategyService strategyService;
-  private final TradeService tradeService;
-  private final EWrapperImpl eWrapper;
-  private final ContractService contractService;
-  private final PositionService positionService;
-  private final AlertService alertService;
+  private final ExecutionRepository executionRepository;
+  private final OrderRepository orderRepository;
 
-  public void executeStrategy(TVAlertDto tvAlertDto) {
-    notificationService.notify(tvAlertDto);
-    AlertEntity alert = alertService.save(tvAlertDto);
+  public void execDetails(int i, Contract contract, Execution execution) {
+    log.info("EXECUTION DETAILS. OrderId: {}, Price: {}, Shares: {}", execution.orderId(),
+        execution.price(), execution.shares());
 
-    Optional<StrategyEntity> strategy = checkStrategy(alert.getStrategy());
-    if (strategy.isEmpty()) {
-      return;
-    }
+    OrderEntity order =
+        orderRepository.findByBrokerOrderId(String.valueOf(execution.orderId()))
+            .orElseThrow(() -> {
+              String errorMessage =
+                  String.format("Order not found with id: %d", execution.orderId());
+              log.error(errorMessage);
+              notificationService.notify(errorMessage);
+              return new OrderNotFoundException(errorMessage);
+            });
 
-    //ibClient.getMarketData(contract);
-    //ibClient.getContractDetails(IBClient.getNextOrderId(), contract);
-    //eWrapper.getEClientSocket().reqPositions();
-    //ibClient.placeOrder(contract, order);
+    ExecutionEntity executionEntity = ExecutionEntity.builder()
+        .execId(execution.execId())
+        .price(BigDecimal.valueOf(execution.price()))
+        .filledQuantity(execution.shares().value().doubleValue())
+        .currency(contract.currency())
+        .build();
 
+    executionEntity.setOrder(order);
+    executionRepository.save(executionEntity);
 
-    Map<String, ContractData> positions = null;
-    try {
-      positions = positionService.requestPositions().get();
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-
-    Double quantity =
-        positions.getOrDefault(alert.getSymbol(), ContractData.builder().quantity(0d).build())
-            .getQuantity();
-
-    if (quantity > 0 && OrderAction.BUY.equals(alert.getAction())) {
-      log.error("Can't buy existing symbol: {}, action: {}, quantity: {}", alert.getSymbol(),
-          alert.getAction(), quantity);
-      return;
-    } else if (quantity <= 0 && OrderAction.SELL.equals(alert.getAction())) {
-      log.error("Can't sell non existing symbol: {}, action: {}, quantity: {}", alert.getSymbol(),
-          alert.getAction(), quantity);
-      return;
-    }
-
-    contractService.requestContract(alert.getSymbol())
-        .thenAccept(contract -> {
-          tradeService.placeOrder(alert, strategy.get(), contract);
-        });
-
+    //order.addExecution(executionEntity);
+    //orderRepository.save(order);
   }
 
-  /*
-  private void checkBeforeOrder(AlertEntity alert) {
-    Map<String, Decimal> positions = positionService.requestPositions().get();
+  public void commissionAndFeesReport(CommissionAndFeesReport report) {
+    log.info("COMMISSION AND FEES REPORT DETAILS. ExecutionId: {}, commissionAndFees: {}," +
+            " currency: {}, realizedPNL: {}, yield: {}, yieldRedemptionDate: {}", report.execId(),
+        report.commissionAndFees(), report.currency(), report.realizedPNL(), report.yield(),
+        report.yieldRedemptionDate());
 
-    Decimal quantity = positions.getOrDefault(alert.getSymbol(), Decimal.ZERO);
+    notificationService.notify(String.format("ExecutionId: %s, realizedPNL: %s", report.execId(),
+        report.realizedPNL()));
 
-    if (quantity.compareTo(Decimal.ZERO) > 0) {
-      log.warn("Already holding symbol: {}, quantity: {}", orderEntity.getSymbol(), quantity);
-      return;
-    }
+    ExecutionEntity executionEntity =
+        executionRepository.findByExecId(String.valueOf(report.execId()))
+            .orElseThrow(() -> {
+              String errorMessage =
+                  String.format("Execution not found with execId: %s", report.execId());
+              log.error(errorMessage);
+              notificationService.notify(errorMessage);
+              return new OrderNotFoundException(errorMessage);
+            });
 
-    contractService.requestContract(alert.getSymbol())
-        .thenAccept(contract -> {
-          orderService.placeOrder(orderEntity, contract);
-        });
-  }
-   */
+    executionEntity.setCommission(BigDecimal.valueOf(report.commissionAndFees()));
+    executionEntity.setRealizedPnl(BigDecimal.valueOf(report.realizedPNL()));
 
-  public Optional<StrategyEntity> checkStrategy(String strategyName) {
-    Optional<StrategyEntity> optionalStrategy = strategyService.findStrategyByName(strategyName);
-
-    if (optionalStrategy.isEmpty()) {
-      log.error("Strategy: '{}' does not exits.", strategyName);
-      notificationService.notify(String.format("Strategy: '%s' does not exits.", strategyName));
-    }
-
-    return optionalStrategy;
+    executionRepository.save(executionEntity);
   }
 
   public void makeMainOrder() {
@@ -115,23 +83,6 @@ public class ExecutionService {
 
   public void makeTakeProfitOrder() {
     // TODO: 09.02.26 need analysis
-  }
-
-  private Contract createContract(OrderEntity orderEntity) {
-    Contract contract = new Contract();
-    contract.secType("STK");
-    contract.currency(orderEntity.getCurrency());
-    contract.exchange("SMART");
-
-    return contract;
-  }
-
-  private Order createOrder(OrderEntity orderEntity) {
-    Order order = new Order();
-    order.orderType(orderEntity.getOrderType());
-    order.totalQuantity(Decimal.get(orderEntity.getQuantity()));
-
-    return order;
   }
 
   private BigDecimal calculateLimitPrice() {

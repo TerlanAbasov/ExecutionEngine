@@ -8,7 +8,7 @@ databaseChangeLog:
                         columns:
                             -   column:
                                     name: id
-                                    type: BIGSERIAL
+                                    type: BIGINT
                                     autoIncrement: true
                                     constraints:
                                         primaryKey: true
@@ -19,17 +19,20 @@ databaseChangeLog:
                                     constraints:
                                         nullable: false
                             -   column:
-                                    name: execution_id
-                                    type: VARCHAR(255)
-                            -   column:
                                     name: alert_id
                                     type: BIGINT
                                     constraints:
+                                        foreignKeyName: fk_order_alert
+                                        referencedTableName: alert
+                                        referencedColumnNames: id
                                         nullable: false
                             -   column:
                                     name: strategy_id
                                     type: INT
                                     constraints:
+                                        foreignKeyName: fk_order_strategy
+                                        referencedTableName: strategy
+                                        referencedColumnNames: id
                                         nullable: false
                             -   column:
                                     name: symbol
@@ -47,11 +50,6 @@ databaseChangeLog:
                             -   column:
                                     name: quantity
                                     type: DOUBLE PRECISION
-                                    constraints:
-                                        nullable: false
-                            -   column:
-                                    name: currency
-                                    type: VARCHAR(3)
                                     constraints:
                                         nullable: false
                             -   column:
@@ -74,21 +72,6 @@ databaseChangeLog:
                                     name: stop_price
                                     type: NUMERIC(15,2)
                             -   column:
-                                    name: filled_quantity
-                                    type: DOUBLE PRECISION
-                            -   column:
-                                    name: average_fill_price
-                                    type: NUMERIC(15,2)
-                            -   column:
-                                    name: realized_pnl
-                                    type: NUMERIC(15,2)
-                            -   column:
-                                    name: commission
-                                    type: NUMERIC(15,2)
-                            -   column:
-                                    name: error_message
-                                    type: TEXT
-                            -   column:
                                     name: submitted_at
                                     type: TIMESTAMP
                             -   column:
@@ -106,3 +89,6 @@ databaseChangeLog:
                                     defaultValueComputed: CURRENT_TIMESTAMP
                                     constraints:
                                         nullable: false
+                            -   column:
+                                    name: error_message
+                                    type: TEXT

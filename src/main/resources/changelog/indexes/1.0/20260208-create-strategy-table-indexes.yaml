@@ -10,14 +10,18 @@ databaseChangeLog:
                         columns:
                             -   column:
                                     name: name
-
                 -   createIndex:
                         indexName: idx_strategy_type
                         tableName: strategy
                         columns:
                             -   column:
                                     name: type
-
+                -   createIndex:
+                        indexName: idx_strategy_position_type
+                        tableName: strategy
+                        columns:
+                            -   column:
+                                    name: position_type
                 -   createIndex:
                         indexName: idx_strategy_created_at
                         tableName: strategy

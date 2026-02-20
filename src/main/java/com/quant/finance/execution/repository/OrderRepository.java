@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
   Optional<OrderEntity> findByBrokerOrderId(String brokerOrderId);
 
-  Optional<OrderEntity> findByExecutionId(String executionId);
+  Optional<OrderEntity> findByExecutions_ExecId(String executionId);
 }

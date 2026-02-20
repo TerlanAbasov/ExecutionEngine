@@ -56,6 +56,7 @@ public class EWrapperImpl implements EWrapper {
   private final ContractService contractService;
   private final OrderService orderService;
   private final PnlService pnlService;
+  private final ExecutionService executionService;
   private final IBErrorHandler ibErrorHandler;
 
   @PostConstruct
@@ -180,7 +181,7 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void execDetails(int i, Contract contract, Execution execution) {
-    orderService.execDetails(i, contract, execution);
+    executionService.execDetails(i, contract, execution);
   }
 
   @Override
@@ -261,7 +262,7 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void commissionAndFeesReport(CommissionAndFeesReport report) {
-    orderService.commissionAndFeesReport(report);
+    executionService.commissionAndFeesReport(report);
   }
 
   @Override
@@ -316,7 +317,7 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void error(int i, long l, int i1, String s, String s1) {
-    ibErrorHandler.error(i, l, i1, s, s1);
+    ibErrorHandler.handleError(i, l, i1, s, s1);
   }
 
   @Override
