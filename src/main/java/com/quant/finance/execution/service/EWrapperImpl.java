@@ -8,9 +8,6 @@ import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
 import com.ib.client.DeltaNeutralContract;
 import com.ib.client.DepthMktDataDescription;
-import com.ib.client.EClientSocket;
-import com.ib.client.EJavaSignal;
-import com.ib.client.EReader;
 import com.ib.client.EWrapper;
 import com.ib.client.Execution;
 import com.ib.client.FamilyCode;
@@ -36,7 +33,6 @@ import com.ib.client.protobuf.OrderStatusProto;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.error.IBErrorHandler;
-import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +45,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class EWrapperImpl implements EWrapper {
 
-  private static EClientSocket eClientSocket = null;
+  //private static EClientSocket eClientSocket = null;
   private final NotificationService notificationService;
   private final ApplicationProperties properties;
   private final PositionService positionService;
@@ -59,42 +55,47 @@ public class EWrapperImpl implements EWrapper {
   private final ExecutionService executionService;
   private final IBErrorHandler ibErrorHandler;
 
-  @PostConstruct
-  public void makeConnection() {
-    EJavaSignal signal = new EJavaSignal();
-    eClientSocket = new EClientSocket(this, signal);
-
-    log.info("Connecting to {}:{}", properties.getClient().getGateway().getHost(),
-        properties.getClient().getGateway().getPort());
-
-    eClientSocket.eConnect(properties.getClient().getGateway().getHost(),
-        properties.getClient().getGateway().getPort(), properties.getClient().getGateway().getId());
-
-    EReader reader = new EReader(eClientSocket, signal);
-    reader.start();
-
-    log.info("Connected to {}:{}", properties.getClient().getGateway().getHost(),
-        properties.getClient().getGateway().getPort());
-
-    new Thread(() -> {
-      while (eClientSocket.isConnected()) {
-        signal.waitForSignal();
-        try {
-          reader.processMsgs();
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
-        }
-      }
-    }).start();
-  }
-
-  public EClientSocket getEClientSocket() {
-    if (!eClientSocket.isConnected()) {
-      makeConnection();
-    }
-
-    return eClientSocket;
-  }
+  //@PostConstruct
+  //public void connect() {
+  //  EJavaSignal signal = new EJavaSignal();
+  //  eClientSocket = new EClientSocket(this, signal);
+  //
+  //  log.info("Connecting to {}:{}", properties.getClient().getGateway().getHost(),
+  //      properties.getClient().getGateway().getPort());
+  //
+  //  eClientSocket.eConnect(properties.getClient().getGateway().getHost(),
+  //      properties.getClient().getGateway().getPort(), properties.getClient().getGateway().getId());
+  //
+  //  EReader reader = new EReader(eClientSocket, signal);
+  //  reader.start();
+  //
+  //  log.info("Connected to {}:{}", properties.getClient().getGateway().getHost(),
+  //      properties.getClient().getGateway().getPort());
+  //
+  //  new Thread(() -> {
+  //    while (eClientSocket.isConnected()) {
+  //      signal.waitForSignal();
+  //      try {
+  //        reader.processMsgs();
+  //      } catch (Exception e) {
+  //        log.error(e.getMessage(), e);
+  //      }
+  //    }
+  //  }).start();
+  //}
+  //
+  //public void disconnect() {
+  //  eClientSocket.eDisconnect();
+  //}
+  //
+  //public EClientSocket getEClientSocket() {
+  //  if (!eClientSocket.isConnected()) {
+  //    disconnect();
+  //    connect();
+  //  }
+  //
+  //  return eClientSocket;
+  //}
 
   @Override
   public void tickPrice(int i, int i1, double v, TickAttrib tickAttrib) {
@@ -318,6 +319,28 @@ public class EWrapperImpl implements EWrapper {
   @Override
   public void error(int i, long l, int i1, String s, String s1) {
     ibErrorHandler.handleError(i, l, i1, s, s1);
+
+    //todo
+
+    /*
+    * if (errorCode == 502 || errorCode == 504) {
+
+        log.warn("Lost TWS connection. Reconnecting...");
+
+        client.eDisconnect();
+
+        new Thread(() -> {
+            while (!client.isConnected()) {
+                try {
+                    Thread.sleep(3000);
+                    client.eConnect(host, port, clientId);
+                } catch (Exception e) {
+                    log.error("Reconnect failed", e);
+                }
+            }
+        }).start();
+    }
+    * */
   }
 
   @Override
@@ -326,9 +349,10 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void connectAck() {
-    if (eClientSocket.isAsyncEConnect()) {
-      eClientSocket.startAPI();
-    }
+    //if (eClientSocket.isAsyncEConnect()) {
+    //  eClientSocket.startAPI();
+    //}
+    IBClient.startAPI();
   }
 
   @Override

@@ -2,7 +2,7 @@ package com.quant.finance.execution.entity;
 
 import static jakarta.persistence.EnumType.STRING;
 
-import com.quant.finance.execution.enums.OrderAction;
+import com.ib.client.Types.Action;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,7 +42,9 @@ public class AlertEntity {
   private String symbol;
   @Enumerated(STRING)
   @Column(nullable = false, length = 20)
-  private OrderAction action;
+  private Action action;
+  @Transient
+  private String peerTicker;
   @Column(nullable = false, length = 200)
   private String strategy;
   @Column(length = 50)
@@ -67,17 +70,4 @@ public class AlertEntity {
   private LocalDateTime updatedAt;
   @Column(nullable = false, length = 2000)
   private String json;
-
-  @OneToMany(mappedBy = "alert", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Setter(AccessLevel.NONE)
-  private List<OrderEntity> orders = new ArrayList<>();
-
-  public void addOrder(OrderEntity order) {
-    if (order == null) {
-      return;
-    }
-
-    this.orders.add(order);
-    order.setAlert(this);
-  }
 }

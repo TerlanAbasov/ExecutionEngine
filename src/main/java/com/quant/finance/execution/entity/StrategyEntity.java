@@ -2,23 +2,18 @@ package com.quant.finance.execution.entity;
 
 import static jakarta.persistence.EnumType.STRING;
 
+import com.ib.client.OrderType;
 import com.quant.finance.execution.enums.StrategyType;
 import com.quant.finance.execution.model.PositionType;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -46,8 +41,16 @@ public class StrategyEntity {
   @Enumerated(STRING)
   @Column(nullable = false, length = 20)
   private PositionType positionType;
-  @Column(nullable = false)
-  private Double maxPositionQuantity;
+  @Enumerated(STRING)
+  @Column(nullable = false, length = 20)
+  private OrderType buyOrderType;
+  @Column(nullable = false, precision = 4, scale = 3)
+  private BigDecimal buyLimitCeiling;
+  @Enumerated(STRING)
+  @Column(nullable = false, length = 20)
+  private OrderType sellOrderType;
+  @Column(nullable = false, precision = 5, scale = 3)
+  private BigDecimal sellLimitFloor;
   @Column(nullable = false, precision = 15, scale = 2)
   private BigDecimal maxPositionAmount;
   @Column(nullable = false)
@@ -62,17 +65,4 @@ public class StrategyEntity {
   @UpdateTimestamp
   @Column(nullable = false)
   private LocalDateTime updatedAt;
-
-  @OneToMany(mappedBy = "strategy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Setter(AccessLevel.NONE)
-  private List<OrderEntity> orders = new ArrayList<>();
-
-  public void addOrder(OrderEntity order) {
-    if (order == null) {
-      return;
-    }
-
-    orders.add(order);
-    order.setStrategy(this);
-  }
 }

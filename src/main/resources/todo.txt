@@ -1,12 +1,11 @@
+- sell/buy first peer symbol
+- end of day jobs. pnl, close positions and etc. according to strategy trade type(intraday, swing...)
 - prod credentials as env variables
-- check max order amount according to strategy
 - reconnection job or command
-- stop and tp orders
-- order details table
 - risk management
 - chatbot commandline integration
 - checker jobs
-- table relations
 - check strategy status
-- new strategy types (alert, command, agent)
 - AI integrations
+
+--On reconnect → call reqOpenOrders() - Rebuild local state from openOrder() callbacks

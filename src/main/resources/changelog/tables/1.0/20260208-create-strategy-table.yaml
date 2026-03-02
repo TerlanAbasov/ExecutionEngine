@@ -30,8 +30,25 @@ databaseChangeLog:
                                     constraints:
                                         nullable: false
                             -   column:
-                                    name: max_position_quantity
-                                    type: DOUBLE PRECISION
+                                    name: buy_order_type
+                                    type: VARCHAR(20)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: buy_limit_ceiling
+                                    type: NUMERIC(4,3)
+                                    defaultValueComputed: "1.000"
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: sell_order_type
+                                    type: VARCHAR(20)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: sell_limit_floor
+                                    type: NUMERIC(5,3)
+                                    defaultValueComputed: "1.000"
                                     constraints:
                                         nullable: false
                             -   column:

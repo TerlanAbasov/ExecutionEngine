@@ -1,7 +1,7 @@
 package com.quant.finance.execution.service;
 
 import com.ib.client.Decimal;
-import java.math.BigDecimal;
+import com.ib.client.Util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,8 +26,7 @@ public class PnlService {
     String message = String.format(
         "PNL SINGLE. RequestId: %d, pos: %s, dailyPnl: %.2f, unrealizedPnl: %.2f, realizedPnL: %s, value: %.2f",
         requestId, pos.toString(), dailyPnL, unrealizedPnl,
-        isValidDouble(realizedPnl) ? BigDecimal.valueOf(realizedPnl).toPlainString() : "0.00",
-        value);
+        Util.DoubleMaxString(realizedPnl, "0.00"), value);
 
     log.info(message);
     notificationService.notify(message);

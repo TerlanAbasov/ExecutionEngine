@@ -34,6 +34,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openApiVersion}"
+    implementation 'org.telegram:telegrambots-springboot-longpolling-starter:7.11.0'
+    implementation 'org.telegram:telegrambots-client:7.11.0'
     implementation 'io.github.openfeign:feign-jackson'
     implementation 'io.github.openfeign:feign-annotation-error-decoder'
     implementation name: 'TwsApi'

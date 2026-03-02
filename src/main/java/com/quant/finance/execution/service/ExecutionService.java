@@ -1,5 +1,7 @@
 package com.quant.finance.execution.service;
 
+import static com.ib.client.Util.DoubleMaxString;
+
 import com.ib.client.CommissionAndFeesReport;
 import com.ib.client.Contract;
 import com.ib.client.Execution;
@@ -39,7 +41,7 @@ public class ExecutionService {
 
     ExecutionEntity executionEntity = ExecutionEntity.builder()
         .execId(execution.execId())
-        .price(BigDecimal.valueOf(execution.price()))
+        .price(new BigDecimal(DoubleMaxString(execution.price(), "0")))
         .filledQuantity(execution.shares().value().doubleValue())
         .currency(contract.currency())
         .build();
@@ -59,11 +61,13 @@ public class ExecutionService {
   public void commissionAndFeesReport(CommissionAndFeesReport report) {
     log.info("COMMISSION AND FEES REPORT DETAILS. ExecutionId: {}, commissionAndFees: {}," +
             " currency: {}, realizedPNL: {}, yield: {}, yieldRedemptionDate: {}", report.execId(),
-        report.commissionAndFees(), report.currency(), report.realizedPNL(), report.yield(),
+        DoubleMaxString(report.commissionAndFees()), report.currency(),
+        DoubleMaxString(report.realizedPNL()),
+        DoubleMaxString(report.yield()),
         report.yieldRedemptionDate());
 
     notificationService.notify(String.format("ExecutionId: %s, realizedPNL: %s", report.execId(),
-        report.realizedPNL()));
+        DoubleMaxString(report.realizedPNL())));
 
     ExecutionEntity executionEntity =
         executionRepository.findByExecId(String.valueOf(report.execId()))
@@ -77,11 +81,16 @@ public class ExecutionService {
       return;
     }
 
-    executionEntity.setCommission(BigDecimal.valueOf(report.commissionAndFees()));
-    executionEntity.setRealizedPnl(BigDecimal.valueOf(report.realizedPNL()));
+    executionEntity.setCommission(
+        new BigDecimal(DoubleMaxString(report.commissionAndFees(), "0")));
+    executionEntity.setRealizedPnl(new BigDecimal(DoubleMaxString(report.realizedPNL(), "0")));
     executionEntity.setTotalAmount(calculateTotalAmount(executionEntity));
 
     executionRepository.save(executionEntity);
+  }
+
+  private boolean isValidDoubleValue(double value) {
+    return Double.isFinite(value) && value != Double.MAX_VALUE && value != Double.MIN_VALUE;
   }
 
   private BigDecimal calculateTotalAmount(ExecutionEntity execution) {
@@ -92,27 +101,11 @@ public class ExecutionService {
           execution.getPrice().multiply(BigDecimal.valueOf(execution.getFilledQuantity()));
     }
 
-    amount = execution.getCommission() != null ? amount.add(execution.getCommission()) :
-        amount;
+    if (execution.getCommission() != null) {
+      amount.add(execution.getCommission());
+    }
 
     return amount;
   }
 
-  public void makeMainOrder() {
-  }
-
-  public void makeStopOrder() {
-  }
-
-  public void makeTakeProfitOrder() {
-    // TODO: 09.02.26 need analysis
-  }
-
-  private BigDecimal calculateLimitPrice() {
-    return null;
-  }
-
-  private BigDecimal calculateStopPrice() {
-    return null;
-  }
 }

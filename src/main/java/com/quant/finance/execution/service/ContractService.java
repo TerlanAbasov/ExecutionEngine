@@ -3,22 +3,25 @@ package com.quant.finance.execution.service;
 import com.ib.client.Contract;
 import com.ib.client.ContractDetails;
 import com.ib.client.Types;
+import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.util.EngineUtil;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class ContractService {
-  private final EWrapperImpl eWrapper;
-
-  public ContractService(@Lazy EWrapperImpl eWrapper) {
-    this.eWrapper = eWrapper;
-  }
+  @Lazy
+  @Autowired
+  private IBClient ibClient;
+  private final NotificationService notificationService;
 
   private final Map<Integer, CompletableFuture<Contract>> contractMap =
       new ConcurrentHashMap<>();
@@ -35,18 +38,23 @@ public class ContractService {
     contract.secType(Types.SecType.STK);
     contract.exchange("SMART");
 
-    eWrapper.getEClientSocket().reqContractDetails(requestId, contract);
+    ibClient.getEClientSocket().reqContractDetails(requestId, contract);
 
     return contractFuture;
   }
 
   public void onContractDetails(int requestId, ContractDetails contractDetails) {
-    log.info("CONTRTACT DETAILS. RequestId: {},ContractDetails: {}", requestId,
-        contractDetails.toString());
+    try {
+      log.info("CONTRTACT DETAILS. RequestId: {},ContractDetails: {}", requestId,
+          contractDetails.toString());
 
-    CompletableFuture<Contract> future = contractMap.get(requestId);
-    if (future != null && !future.isDone()) {
-      future.complete(contractDetails.contract());
+      CompletableFuture<Contract> future = contractMap.get(requestId);
+      if (future != null && !future.isDone()) {
+        future.complete(contractDetails.contract());
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      notificationService.notify(e.getMessage());
     }
   }
 

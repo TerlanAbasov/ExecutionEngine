@@ -26,12 +26,11 @@ spring:
 
 application:
     client:
-        discord:
-            url: 'https://discord.com'
         telegram:
             url: 'https://api.telegram.org'
             token: '8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA'
             chatId: '1014578999'
+            botUsername: TradingViewAletsBot
             enabled: false
         gateway:
             host: 128.140.74.222

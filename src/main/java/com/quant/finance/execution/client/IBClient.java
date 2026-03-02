@@ -1,9 +1,16 @@
 package com.quant.finance.execution.client;
 
 import com.ib.client.Contract;
+import com.ib.client.EClientSocket;
+import com.ib.client.EJavaSignal;
+import com.ib.client.EReader;
 import com.ib.client.Order;
+import com.ib.client.OrderCancel;
+import com.ib.client.Util;
+import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.service.EWrapperImpl;
 import com.quant.finance.execution.service.NotificationService;
+import jakarta.annotation.PostConstruct;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +23,59 @@ import org.springframework.stereotype.Service;
 public class IBClient {
   private static final AtomicInteger orderIds =
       new AtomicInteger(ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE));
+  private static EClientSocket eClientSocket = null;
+
   private final EWrapperImpl eWrapper;
   private final NotificationService notificationService;
+  private final ApplicationProperties properties;
+
+  @PostConstruct
+  public void connect() {
+    EJavaSignal signal = new EJavaSignal();
+    eClientSocket = new EClientSocket(eWrapper, signal);
+
+    log.info("Connecting to {}:{}", properties.getClient().getGateway().getHost(),
+        properties.getClient().getGateway().getPort());
+
+    eClientSocket.eConnect(properties.getClient().getGateway().getHost(),
+        properties.getClient().getGateway().getPort(), properties.getClient().getGateway().getId());
+
+    EReader reader = new EReader(eClientSocket, signal);
+    reader.start();
+
+    log.info("Connected to {}:{}", properties.getClient().getGateway().getHost(),
+        properties.getClient().getGateway().getPort());
+
+    new Thread(() -> {
+      while (eClientSocket.isConnected()) {
+        signal.waitForSignal();
+        try {
+          reader.processMsgs();
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+        }
+      }
+    }).start();
+  }
+
+  public static void startAPI() {
+    if (eClientSocket.isAsyncEConnect()) {
+      eClientSocket.startAPI();
+    }
+  }
+
+  public void disconnect() {
+    eClientSocket.eDisconnect();
+  }
+
+  public EClientSocket getEClientSocket() {
+    if (!eClientSocket.isConnected()) {
+      disconnect();
+      connect();
+    }
+
+    return eClientSocket;
+  }
 
   public static synchronized int getNextOrderId() {
     return orderIds.getAndIncrement();
@@ -28,21 +86,40 @@ public class IBClient {
   }
 
   public void placeOrder(Contract contract, Order order) {
-    String message = String.format("Placing order. Symbol: %s, action: %s, quantity: %d, id: %d",
-        contract.symbol(),
-        order.action().name(), order.totalQuantity().longValue(), order.orderId());
-    log.info(message);
-    notificationService.notify(message);
-    eWrapper.getEClientSocket().placeOrder(order.orderId(), contract, order);
+    String message = "";
+    try {
+      message = String.format(
+          "Placing order. Id: %d, parentId: %d, symbol: %s, action: %s, orderType: %s," +
+              " quantity: %d, limitPrice: %s, auxPrice: %s",
+          order.orderId(), order.parentId(), contract.symbol(), order.action().name(),
+          order.getOrderType(), order.totalQuantity().longValue(),
+          Util.DoubleMaxString(order.lmtPrice()), Util.DoubleMaxString(order.auxPrice()));
+
+      log.info(message);
+      notificationService.notify(message);
+      eClientSocket.placeOrder(order.orderId(), contract, order);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      notificationService.notify(message + " --> " + e.getMessage());
+    }
+  }
+
+  public void requestPositions() {
+    log.info("Requesting positions");
+    eClientSocket.reqPositions();
   }
 
   public void getContractDetails(int id, Contract contract) {
-    eWrapper.getEClientSocket().reqContractDetails(id, contract);
+    eClientSocket.reqContractDetails(id, contract);
   }
 
   public void getMarketData(Contract contract) {
-    eWrapper.getEClientSocket().reqMarketDataType(1);
-    eWrapper.getEClientSocket()
-        .reqMktData(ThreadLocalRandom.current().nextInt(), contract, "", false, false, null);
+    eClientSocket.reqMarketDataType(1);
+    eClientSocket.reqMktData(ThreadLocalRandom.current().nextInt(), contract, "", false, false,
+        null);
+  }
+
+  public void cancelOrder(int orderId, OrderCancel orderCancel) {
+    eClientSocket.cancelOrder(orderId, orderCancel);
   }
 }

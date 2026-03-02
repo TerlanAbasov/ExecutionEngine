@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AccountCommandService {
   private final IBClient ibClient;
-  private final EWrapperImpl eWrapper;
   private final ApplicationProperties properties;
 
   public void executeCommand(AccountCommandDto commandDto) {
@@ -23,31 +22,29 @@ public class AccountCommandService {
 
     switch (commandDto.getMessage().getCommand()) {
       case "POSITIONS":
-        eWrapper.getEClientSocket().reqPositions();
+        ibClient.requestPositions();
         break;
       case "PNL":
-        eWrapper.getEClientSocket()
+        ibClient.getEClientSocket()
             .reqPnL(EngineUtil.nextRequestId(), properties.getAccount().getId(), "");
         // TODO: 10.02.26 store requestId for cancellation
         break;
       case "CANCEL_PNL":
-        eWrapper.getEClientSocket()
-            .cancelPnL(EngineUtil.nextRequestId());
+        ibClient.getEClientSocket().cancelPnL(EngineUtil.nextRequestId());
         break;
       case "PNL_SINGLE":
-        eWrapper.getEClientSocket()
-            .reqPnLSingle(EngineUtil.nextRequestId(), properties.getAccount().getId(),
-                "", 753278772); // TSLR 649964878
-        eWrapper.getEClientSocket()
-            .reqPnLSingle(EngineUtil.nextRequestId(), properties.getAccount().getId(),
-                "", 649964878);
+        ibClient.getEClientSocket()
+            .reqPnLSingle(EngineUtil.nextRequestId(), properties.getAccount().getId(), "",
+                753278772); // TSLR 649964878
+        ibClient.getEClientSocket()
+            .reqPnLSingle(EngineUtil.nextRequestId(), properties.getAccount().getId(), "",
+                649964878);
         break;
       case "CANCEL_PNL_SINGLE":
-        eWrapper.getEClientSocket()
-            .cancelPnLSingle(EngineUtil.nextRequestId());
+        ibClient.getEClientSocket().cancelPnLSingle(EngineUtil.nextRequestId());
         break;
       case "ORDERS":
-        eWrapper.getEClientSocket().reqOpenOrders();
+        ibClient.getEClientSocket().reqOpenOrders();
         break;
       case "COMISSION":
         // TODO: 10.02.26

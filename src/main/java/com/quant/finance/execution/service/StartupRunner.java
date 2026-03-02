@@ -16,7 +16,7 @@ public class StartupRunner implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    notificationService.notify("ExecutionEngine is running!");
+    notificationService.notify("\uD83D\uDE80 ExecutionEngine is running!");
 
     //simulate();
   }

@@ -27,6 +27,7 @@ public class AlertService {
   }
 
   public void processAlert(TVAlertDto tvAlertDto) {
+    log.info("Processing alert {}", tvAlertDto);
     notificationService.notify(tvAlertDto);
     AlertEntity alert = repository.save(alertMapper.toEntity(tvAlertDto));
 

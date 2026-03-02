@@ -4,7 +4,7 @@ import static jakarta.persistence.EnumType.STRING;
 
 import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
-import com.quant.finance.execution.enums.OrderAction;
+import com.ib.client.Types;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,34 +46,35 @@ public class OrderEntity {
   private String brokerOrderId;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "alert_id", nullable = false,
-      foreignKey = @ForeignKey(name = "fk_order_alert"))
-  private AlertEntity alert;
-
-  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "strategy_id", nullable = false,
       foreignKey = @ForeignKey(name = "fk_order_strategy"))
   private StrategyEntity strategy;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "alert_id")
+  private AlertEntity alert;
+
   @Column(nullable = false, length = 32)
   private String symbol;
   private Integer contractId;
+  private Long parentOrderId;
   @Enumerated(STRING)
   @Column(nullable = false, length = 20)
-  private OrderAction action;
-  @Column(nullable = false)
-  private Double quantity;
+  private Types.Action action;
   @Enumerated(STRING)
   @Column(nullable = false, length = 20)
   private OrderStatus status;
   @Enumerated(STRING)
   @Column(nullable = false, length = 20)
   private OrderType orderType;
-  private Long parentOrderId;
+  @Column(nullable = false)
+  private Double quantity;
   @Column(precision = 15, scale = 2)
   private BigDecimal limitPrice;
   @Column(precision = 15, scale = 2)
-  private BigDecimal stopPrice;
+  private BigDecimal takeProfitPrice;
+  @Column(precision = 15, scale = 2)
+  private BigDecimal stopLossPrice;
   private LocalDateTime submittedAt;
   private LocalDateTime filledAt;
   @CreationTimestamp
@@ -87,6 +88,7 @@ public class OrderEntity {
   @OneToMany(mappedBy = "order", cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       fetch = FetchType.LAZY)
   @Setter(AccessLevel.NONE)
+  @Builder.Default
   private List<ExecutionEntity> executions = new ArrayList<>();
 
   public void addExecution(ExecutionEntity execution) {

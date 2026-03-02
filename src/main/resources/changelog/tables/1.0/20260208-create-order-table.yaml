@@ -20,14 +20,6 @@ databaseChangeLog:
                                         nullable: false
                                         unique: true
                             -   column:
-                                    name: alert_id
-                                    type: BIGINT
-                                    constraints:
-                                        foreignKeyName: fk_order_alert
-                                        referencedTableName: alert
-                                        referencedColumnNames: id
-                                        nullable: false
-                            -   column:
                                     name: strategy_id
                                     type: INT
                                     constraints:
@@ -35,6 +27,9 @@ databaseChangeLog:
                                         referencedTableName: strategy
                                         referencedColumnNames: id
                                         nullable: false
+                            -   column:
+                                    name: alert_id
+                                    type: BIGINT
                             -   column:
                                     name: symbol
                                     type: VARCHAR(32)
@@ -44,13 +39,11 @@ databaseChangeLog:
                                     name: contract_id
                                     type: INT
                             -   column:
+                                    name: parent_order_id
+                                    type: BIGINT
+                            -   column:
                                     name: action
                                     type: VARCHAR(20)
-                                    constraints:
-                                        nullable: false
-                            -   column:
-                                    name: quantity
-                                    type: DOUBLE PRECISION
                                     constraints:
                                         nullable: false
                             -   column:
@@ -64,13 +57,18 @@ databaseChangeLog:
                                     constraints:
                                         nullable: false
                             -   column:
-                                    name: parent_order_id
-                                    type: BIGINT
+                                    name: quantity
+                                    type: DOUBLE PRECISION
+                                    constraints:
+                                        nullable: false
                             -   column:
                                     name: limit_price
                                     type: NUMERIC(15,2)
                             -   column:
-                                    name: stop_price
+                                    name: take_profit_price
+                                    type: NUMERIC(15,2)
+                            -   column:
+                                    name: stop_loss_price
                                     type: NUMERIC(15,2)
                             -   column:
                                     name: submitted_at
