@@ -1,6 +1,6 @@
 package com.quant.finance.execution.service;
 
-import com.ib.client.Contract;
+import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
 import com.ib.client.Order;
 import com.ib.client.OrderCancel;
@@ -18,7 +18,6 @@ import com.quant.finance.execution.repository.OrderRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -30,33 +29,40 @@ import org.springframework.transaction.annotation.Transactional;
 public class TradeService {
   private final OrderRepository repository;
   private final OrderService orderService;
+  private final NotificationService notificationService;
   private final EWrapperImpl eWrapper;
   @Lazy
   @Autowired
   private IBClient ibClient;
 
   @Transactional
-  public void trade(AlertEntity alert, StrategyEntity strategy, Contract contract,
+  public void trade(AlertEntity alert, StrategyEntity strategy, ContractDetails contractDetails,
                     double existingQuantity) {
-    OrderEntity parentOrderEntity =
-        orderService.buildAndSaveParentOrder(alert, strategy, contract, existingQuantity);
-    Order parentOrder = createParentOrder(parentOrderEntity);
-    ibClient.placeOrder(contract, parentOrder);
+    //todo if quantity is zero do not trade
+    try {
+      OrderEntity parentOrderEntity =
+          orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingQuantity);
+      Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
+      ibClient.placeOrder(contractDetails.contract(), parentOrder);
 
-    if (parentOrder.action() == Action.BUY) {
-      OrderEntity tpOrderEntity =
-          orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.LMT, Action.SELL);
-      Order tpOrder = createChildOrder(tpOrderEntity, parentOrder, false);
-      ibClient.placeOrder(contract, tpOrder);
+      if (parentOrder.action() == Action.BUY) {
+        OrderEntity tpOrderEntity =
+            orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.LMT, Action.SELL);
+        Order tpOrder = createChildOrder(tpOrderEntity, parentOrder, contractDetails);
+        ibClient.placeOrder(contractDetails.contract(), tpOrder);
 
-      OrderEntity slOrderEntity =
-          orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.STP, Action.SELL);
-      Order slOrder = createChildOrder(slOrderEntity, parentOrder, true);
-      ibClient.placeOrder(contract, slOrder);
+        OrderEntity slOrderEntity =
+            orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.STP, Action.SELL);
+        Order slOrder = createChildOrder(slOrderEntity, parentOrder, contractDetails);
+        ibClient.placeOrder(contractDetails.contract(), slOrder);
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      notificationService.notify(String.format("TradeService.trade(). %s", e.getMessage()));
     }
   }
 
-  public Order createParentOrder(OrderEntity orderEntity) {
+  public Order createParentOrder(OrderEntity orderEntity, ContractDetails contractDetails) {
     Order order = new Order();
     setOrderId(orderEntity, order);
     order.action(orderEntity.getAction().name());
@@ -65,20 +71,27 @@ public class TradeService {
     order.tif(TimeInForce.DAY);
 
     if (order.action() == Action.BUY) {
-      order.lmtPrice(orderEntity.getLimitPrice().doubleValue());
+      if (order.orderType() == OrderType.LMT) {
+        double limitPrice = orderEntity.getLimitPrice().doubleValue();
+        order.lmtPrice(
+            Math.round(limitPrice / contractDetails.minTick()) * contractDetails.minTick());
+      }
       order.transmit(false);
     } else if (order.action() == Action.SELL) {
       order.transmit(true);
 
       if (order.orderType() == OrderType.LMT) {
-        order.auxPrice(orderEntity.getLimitPrice().doubleValue());
+        double limitPrice = orderEntity.getLimitPrice().doubleValue();
+        order.auxPrice(
+            Math.round(limitPrice / contractDetails.minTick()) * contractDetails.minTick());
       }
     }
 
     return order;
   }
 
-  public Order createChildOrder(OrderEntity orderEntity, Order parent, boolean transmit) {
+  public Order createChildOrder(OrderEntity orderEntity, Order parent,
+                                ContractDetails contractDetails) {
     String ocaGroup = "BRACKET_" + parent.orderId();
 
     Order order = new Order();
@@ -90,22 +103,26 @@ public class TradeService {
     order.tif(TimeInForce.GTC);
     order.ocaGroup(ocaGroup);
     order.ocaType(1);
-    order.transmit(true);
 
     if (order.orderType() == OrderType.LMT) {
-      order.lmtPrice(orderEntity.getTakeProfitPrice().doubleValue());
+      order.transmit(false);
+      double limitPrice = orderEntity.getTakeProfitPrice().doubleValue();
+      order.lmtPrice(
+          Math.round(limitPrice / contractDetails.minTick()) * contractDetails.minTick());
     } else if (order.orderType() == OrderType.STP) {
-      order.auxPrice(orderEntity.getStopLossPrice().doubleValue());
+      order.transmit(true);
+      double auxPrice = orderEntity.getStopLossPrice().doubleValue();
+      order.auxPrice(Math.round(auxPrice / contractDetails.minTick()) * contractDetails.minTick());
     }
     return order;
   }
 
   private void setOrderId(OrderEntity orderEntity, Order order) {
-    order.orderId(Integer.parseInt(orderEntity.getBrokerOrderId()));
+    order.orderId(orderEntity.getBrokerOrderId());
   }
 
   public void cancelOrder(OrderCancelDto dto) {
-    if (StringUtils.isBlank(dto.getOrderId())) {
+    if (dto.getOrderId() != null) {
       orderService.findCancellableOrdersBySymbol(dto.getSymbol()).forEach(this::cancelIfIsActive);
     } else {
       Optional<OrderEntity> order = orderService.findByBrokerOrderId(dto.getOrderId());
@@ -119,7 +136,7 @@ public class TradeService {
     if (order.getStatus().isActive() || order.getStatus() == OrderStatus.ApiPending) {
       log.info("Cancelling order with id: {}, status: {}", order.getBrokerOrderId(),
           order.getStatus());
-      ibClient.cancelOrder(Integer.parseInt(order.getBrokerOrderId()), new OrderCancel());
+      ibClient.cancelOrder(order.getBrokerOrderId(), new OrderCancel());
     } else {
       log.info("Unable to cancel order with id: {}, status: {}", order.getBrokerOrderId(),
           order.getStatus());

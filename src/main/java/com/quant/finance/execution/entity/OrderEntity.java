@@ -41,9 +41,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class OrderEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-  @Column(nullable = false, length = 255)
-  private String brokerOrderId;
+  private Integer id;
+  @Column(nullable = false)
+  private Integer brokerOrderId;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "strategy_id", nullable = false,
@@ -57,7 +57,7 @@ public class OrderEntity {
   @Column(nullable = false, length = 32)
   private String symbol;
   private Integer contractId;
-  private Long parentOrderId;
+  private Integer parentOrderId;
   @Enumerated(STRING)
   @Column(nullable = false, length = 20)
   private Types.Action action;

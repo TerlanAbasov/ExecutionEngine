@@ -1,5 +1,6 @@
 package com.quant.finance.execution;
 
+import com.quant.finance.execution.client.RoutingClient;
 import com.quant.finance.execution.client.TelegramClient;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -11,7 +12,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.core.env.Environment;
 
 @SpringBootApplication
-@EnableFeignClients(clients = {TelegramClient.class})
+@EnableFeignClients(clients = {TelegramClient.class, RoutingClient.class})
 @Slf4j
 public class ExecutionEngineApplication {
 
@@ -50,7 +51,6 @@ public class ExecutionEngineApplication {
         contextPath,
         env.getActiveProfiles());
   }
-
 
 
 }

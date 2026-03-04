@@ -1,5 +1,7 @@
 package com.quant.finance.execution.client;
 
+import static java.util.concurrent.ThreadLocalRandom.current;
+
 import com.ib.client.Contract;
 import com.ib.client.EClientSocket;
 import com.ib.client.EJavaSignal;
@@ -10,11 +12,12 @@ import com.ib.client.Util;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.service.EWrapperImpl;
 import com.quant.finance.execution.service.NotificationService;
+import com.quant.finance.execution.service.OrderService;
 import jakarta.annotation.PostConstruct;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,12 +25,18 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class IBClient {
   private static final AtomicInteger orderIds =
-      new AtomicInteger(ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE));
+      new AtomicInteger(current().nextInt(1, Integer.MAX_VALUE));
   private static EClientSocket eClientSocket = null;
 
   private final EWrapperImpl eWrapper;
   private final NotificationService notificationService;
   private final ApplicationProperties properties;
+  private static OrderService orderService;
+
+  @Autowired
+  public void setOrderRepository(OrderService orderService) {
+    IBClient.orderService = orderService;
+  }
 
   @PostConstruct
   public void connect() {
@@ -49,8 +58,10 @@ public class IBClient {
     new Thread(() -> {
       while (eClientSocket.isConnected()) {
         signal.waitForSignal();
+        log.info("Waiting for signal");
         try {
           reader.processMsgs();
+          log.info("Processing Messages");
         } catch (Exception e) {
           log.error(e.getMessage(), e);
         }
@@ -81,8 +92,13 @@ public class IBClient {
     return orderIds.getAndIncrement();
   }
 
-  public static synchronized void setNextOrderId(int id) {
-    orderIds.set(id);
+  public static synchronized void setNextOrderId(int ibOrderId) {
+    int maxDBOrderId = orderService.findMaxBrokerOrderId();
+    if (ibOrderId >= maxDBOrderId) {
+      orderIds.set(ibOrderId);
+    } else {
+      orderIds.set(++maxDBOrderId);
+    }
   }
 
   public void placeOrder(Contract contract, Order order) {
@@ -90,10 +106,11 @@ public class IBClient {
     try {
       message = String.format(
           "Placing order. Id: %d, parentId: %d, symbol: %s, action: %s, orderType: %s," +
-              " quantity: %d, limitPrice: %s, auxPrice: %s",
+              " quantity: %d, limitPrice: %s, auxPrice: %s, tif: %s, transmit: %b",
           order.orderId(), order.parentId(), contract.symbol(), order.action().name(),
           order.getOrderType(), order.totalQuantity().longValue(),
-          Util.DoubleMaxString(order.lmtPrice()), Util.DoubleMaxString(order.auxPrice()));
+          Util.DoubleMaxString(order.lmtPrice()), Util.DoubleMaxString(order.auxPrice()),
+          order.tif().name(), order.transmit());
 
       log.info(message);
       notificationService.notify(message);
@@ -115,11 +132,22 @@ public class IBClient {
 
   public void getMarketData(Contract contract) {
     eClientSocket.reqMarketDataType(1);
-    eClientSocket.reqMktData(ThreadLocalRandom.current().nextInt(), contract, "", false, false,
+    eClientSocket.reqMktData(current().nextInt(), contract, "", false, false,
         null);
   }
 
   public void cancelOrder(int orderId, OrderCancel orderCancel) {
     eClientSocket.cancelOrder(orderId, orderCancel);
+  }
+
+  public void requestSinglePnl(int requestId, String accountId, String s, int conId) {
+    log.info("Requesting single PNL. requestId: {}, accountId: {}, conId: {}", requestId, accountId,
+        conId);
+
+    eClientSocket.reqPnLSingle(requestId, accountId, s, conId);
+  }
+
+  public void requestOpenOrders() {
+    eClientSocket.reqOpenOrders();
   }
 }

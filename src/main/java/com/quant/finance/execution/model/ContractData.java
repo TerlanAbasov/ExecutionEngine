@@ -13,4 +13,8 @@ public class ContractData {
   @Builder.Default
   private Double quantity = 0d;
   private Double averageCost;
+  private String dailyPnL;
+  private String unrealizedPnl;
+  private String realizedPnl;
+  private Double value;
 }

@@ -42,7 +42,6 @@ public class NotificationService {
   }
 
   public void notify(String message) {
-
     if (properties.getClient().getTelegram().isEnabled()) {
       //telegramClient.sendMessage("8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA", "1014578999",
       //    message);

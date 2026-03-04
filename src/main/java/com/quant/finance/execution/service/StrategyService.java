@@ -23,7 +23,6 @@ public class StrategyService {
   private final TradeService tradeService;
 
   public void executeStrategy(AlertEntity alert) {
-
     Optional<StrategyEntity> strategy = checkStrategy(alert);
     if (strategy.isEmpty()) {
       return;
@@ -56,8 +55,8 @@ public class StrategyService {
     }
 
     contractService.requestContract(alert.getSymbol())
-        .thenAccept(contract -> {
-          tradeService.trade(alert, strategy.get(), contract, quantity);
+        .thenAccept(contractDetails -> {
+          tradeService.trade(alert, strategy.get(), contractDetails, quantity);
         });
   }
 

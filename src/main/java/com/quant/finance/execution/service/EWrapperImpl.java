@@ -38,64 +38,21 @@ import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EWrapperImpl implements EWrapper {
-
-  //private static EClientSocket eClientSocket = null;
   private final NotificationService notificationService;
   private final ApplicationProperties properties;
   private final PositionService positionService;
   private final ContractService contractService;
   private final OrderService orderService;
-  private final PnlService pnlService;
   private final ExecutionService executionService;
   private final IBErrorHandler ibErrorHandler;
-
-  //@PostConstruct
-  //public void connect() {
-  //  EJavaSignal signal = new EJavaSignal();
-  //  eClientSocket = new EClientSocket(this, signal);
-  //
-  //  log.info("Connecting to {}:{}", properties.getClient().getGateway().getHost(),
-  //      properties.getClient().getGateway().getPort());
-  //
-  //  eClientSocket.eConnect(properties.getClient().getGateway().getHost(),
-  //      properties.getClient().getGateway().getPort(), properties.getClient().getGateway().getId());
-  //
-  //  EReader reader = new EReader(eClientSocket, signal);
-  //  reader.start();
-  //
-  //  log.info("Connected to {}:{}", properties.getClient().getGateway().getHost(),
-  //      properties.getClient().getGateway().getPort());
-  //
-  //  new Thread(() -> {
-  //    while (eClientSocket.isConnected()) {
-  //      signal.waitForSignal();
-  //      try {
-  //        reader.processMsgs();
-  //      } catch (Exception e) {
-  //        log.error(e.getMessage(), e);
-  //      }
-  //    }
-  //  }).start();
-  //}
-  //
-  //public void disconnect() {
-  //  eClientSocket.eDisconnect();
-  //}
-  //
-  //public EClientSocket getEClientSocket() {
-  //  if (!eClientSocket.isConnected()) {
-  //    disconnect();
-  //    connect();
-  //  }
-  //
-  //  return eClientSocket;
-  //}
 
   @Override
   public void tickPrice(int i, int i1, double v, TickAttrib tickAttrib) {
@@ -133,7 +90,7 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void openOrder(int i, Contract contract, Order order, OrderState orderState) {
-    log.info("OPEN ORDER. orderId: {}, status: {}", i, orderState.status());
+    log.info("OPEN ORDER. orderId: {}, status: {}", order.orderId(), orderState.status());
   }
 
   @Override
@@ -462,13 +419,13 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void pnl(int requestId, double dailyPnL, double unrealizedPnl, double realizedPnl) {
-    pnlService.pnl(requestId, dailyPnL, unrealizedPnl, realizedPnl);
+    positionService.pnl(requestId, dailyPnL, unrealizedPnl, realizedPnl);
   }
 
   @Override
   public void pnlSingle(int requestId, Decimal pos, double dailyPnL, double unrealizedPnl,
                         double realizedPnl, double value) {
-    pnlService.pnlSingle(requestId, pos, dailyPnL, unrealizedPnl, realizedPnl, value);
+    positionService.pnlSingle(requestId, pos, dailyPnL, unrealizedPnl, realizedPnl, value);
   }
 
   @Override

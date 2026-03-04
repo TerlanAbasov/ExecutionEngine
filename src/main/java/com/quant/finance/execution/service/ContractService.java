@@ -23,14 +23,14 @@ public class ContractService {
   private IBClient ibClient;
   private final NotificationService notificationService;
 
-  private final Map<Integer, CompletableFuture<Contract>> contractMap =
+  private final Map<Integer, CompletableFuture<ContractDetails>> contractMap =
       new ConcurrentHashMap<>();
 
-  public CompletableFuture<Contract> requestContract(String symbol) {
+  public CompletableFuture<ContractDetails> requestContract(String symbol) {
 
     int requestId = EngineUtil.nextRequestId();
 
-    CompletableFuture<Contract> contractFuture = new CompletableFuture<>();
+    CompletableFuture<ContractDetails> contractFuture = new CompletableFuture<>();
     contractMap.put(requestId, contractFuture);
 
     Contract contract = new Contract();
@@ -48,9 +48,9 @@ public class ContractService {
       log.info("CONTRTACT DETAILS. RequestId: {},ContractDetails: {}", requestId,
           contractDetails.toString());
 
-      CompletableFuture<Contract> future = contractMap.get(requestId);
+      CompletableFuture<ContractDetails> future = contractMap.get(requestId);
       if (future != null && !future.isDone()) {
-        future.complete(contractDetails.contract());
+        future.complete(contractDetails);
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);

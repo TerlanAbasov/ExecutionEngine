@@ -25,14 +25,11 @@ public class PnlService {
                         double realizedPnl, double value) {
     String message = String.format(
         "PNL SINGLE. RequestId: %d, pos: %s, dailyPnl: %.2f, unrealizedPnl: %.2f, realizedPnL: %s, value: %.2f",
-        requestId, pos.toString(), dailyPnL, unrealizedPnl,
-        Util.DoubleMaxString(realizedPnl, "0.00"), value);
+        requestId, pos.toString(), Util.DoubleMaxString(dailyPnL),
+        Util.DoubleMaxString(unrealizedPnl),
+        Util.DoubleMaxString(realizedPnl), value);
 
     log.info(message);
     notificationService.notify(message);
-  }
-
-  private static boolean isValidDouble(double value) {
-    return value != Double.MAX_VALUE && !Double.isNaN(value) && !Double.isInfinite(value);
   }
 }

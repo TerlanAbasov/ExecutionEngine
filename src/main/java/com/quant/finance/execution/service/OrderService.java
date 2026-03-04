@@ -6,6 +6,7 @@ import static com.ib.client.OrderStatus.PreSubmitted;
 import static com.ib.client.OrderStatus.Submitted;
 
 import com.ib.client.Contract;
+import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
 import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
@@ -43,7 +44,7 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public Optional<OrderEntity> findByBrokerOrderId(String brokerOrderId) {
+  public Optional<OrderEntity> findByBrokerOrderId(int brokerOrderId) {
     return repository.findByBrokerOrderId(brokerOrderId);
   }
 
@@ -59,17 +60,22 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public Optional<OrderEntity> findByExecutionId(String executionId) {
+  public Optional<OrderEntity> findByExecutionId(int executionId) {
     return repository.findByBrokerOrderId(executionId);
   }
 
+  @Transactional(readOnly = true)
+  public Integer findMaxBrokerOrderId() {
+    return repository.findTopByOrderByBrokerOrderIdDesc().orElse(0);
+  }
+
   public OrderEntity buildAndSaveParentOrder(AlertEntity alert, StrategyEntity strategy,
-                                             Contract contract, double existingQuantity) {
+                                             ContractDetails contractDetails, double existingQuantity) {
     OrderEntity order = OrderEntity.builder()
-        .brokerOrderId(String.valueOf(IBClient.getNextOrderId()))
+        .brokerOrderId(IBClient.getNextOrderId())
         .strategy(strategy)
         .symbol(alert.getSymbol())
-        .contractId(contract.conid())
+        .contractId(contractDetails.contract().conid())
         .action(alert.getAction())
         .status(ApiPending)
         .build();
@@ -106,25 +112,25 @@ public class OrderService {
     order.setLimitPrice(price);
   }
 
-  public OrderEntity buildAndSaveChildOrder(OrderEntity mainOrder, OrderType orderType,
+  public OrderEntity buildAndSaveChildOrder(OrderEntity parentOrder, OrderType orderType,
                                             Action action) {
     OrderEntity orderEntity = OrderEntity.builder()
-        .brokerOrderId(String.valueOf(IBClient.getNextOrderId()))
-        .alert(mainOrder.getAlert())
-        .strategy(mainOrder.getStrategy())
-        .symbol(mainOrder.getSymbol())
-        .contractId(mainOrder.getContractId())
+        .brokerOrderId(IBClient.getNextOrderId())
+        .alert(parentOrder.getAlert())
+        .strategy(parentOrder.getStrategy())
+        .symbol(parentOrder.getSymbol())
+        .contractId(parentOrder.getContractId())
         .action(action)
-        .quantity(mainOrder.getQuantity())
+        .quantity(parentOrder.getQuantity())
         .status(ApiPending)
         .orderType(orderType)
-        .parentOrderId(mainOrder.getId())
+        .parentOrderId(parentOrder.getId())
         .build();
 
     if (orderType == OrderType.LMT) {
-      orderEntity.setTakeProfitPrice(mainOrder.getTakeProfitPrice());
+      orderEntity.setTakeProfitPrice(parentOrder.getTakeProfitPrice());
     } else if (orderType == OrderType.STP) {
-      orderEntity.setStopLossPrice(mainOrder.getStopLossPrice());
+      orderEntity.setStopLossPrice(parentOrder.getStopLossPrice());
     }
 
     return repository.save(orderEntity);
@@ -178,13 +184,12 @@ public class OrderService {
         notificationService.notify(message);
       }
 
-      OrderEntity order = repository.findByBrokerOrderId(String.valueOf(orderId))
-          .orElse(null);
+      Optional<OrderEntity> order = repository.findByBrokerOrderId(orderId);
 
-      if (order != null) {
-        order.setStatus(OrderStatus.get(status));
-        setDateTimes(order, status);
-        repository.save(order);
+      if (order.isPresent()) {
+        order.get().setStatus(OrderStatus.get(status));
+        setDateTimes(order.get(), status);
+        repository.save(order.get());
       } else {
         String errorMessage = String.format("Order not found with id: %d", orderId);
         log.error(errorMessage);

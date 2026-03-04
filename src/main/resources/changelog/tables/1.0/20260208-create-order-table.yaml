@@ -8,14 +8,14 @@ databaseChangeLog:
                         columns:
                             -   column:
                                     name: id
-                                    type: BIGINT
+                                    type: INT
                                     autoIncrement: true
                                     constraints:
                                         primaryKey: true
                                         nullable: false
                             -   column:
                                     name: broker_order_id
-                                    type: VARCHAR(255)
+                                    type: INT
                                     constraints:
                                         nullable: false
                                         unique: true
@@ -40,7 +40,7 @@ databaseChangeLog:
                                     type: INT
                             -   column:
                                     name: parent_order_id
-                                    type: BIGINT
+                                    type: INT
                             -   column:
                                     name: action
                                     type: VARCHAR(20)

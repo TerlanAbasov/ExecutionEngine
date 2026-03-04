@@ -45,7 +45,7 @@ public class IBErrorHandler {
   }
 
   private void setErrorMessageToOrder(int orderId, String errorText) {
-    Optional<OrderEntity> optionalOrder = orderService.findByBrokerOrderId(String.valueOf(orderId));
+    Optional<OrderEntity> optionalOrder = orderService.findByBrokerOrderId(orderId);
 
     if (optionalOrder.isPresent()) {
       optionalOrder.get().setErrorMessage(errorText);

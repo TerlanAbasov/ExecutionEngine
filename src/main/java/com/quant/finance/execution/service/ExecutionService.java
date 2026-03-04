@@ -28,7 +28,7 @@ public class ExecutionService {
         execution.price(), execution.shares());
 
     OrderEntity order =
-        orderRepository.findByBrokerOrderId(String.valueOf(execution.orderId()))
+        orderRepository.findByBrokerOrderId(execution.orderId())
             .orElse(null);
 
     if (order == null) {

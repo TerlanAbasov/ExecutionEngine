@@ -43,8 +43,8 @@ public class AccountCommandService {
       case "CANCEL_PNL_SINGLE":
         ibClient.getEClientSocket().cancelPnLSingle(EngineUtil.nextRequestId());
         break;
-      case "ORDERS":
-        ibClient.getEClientSocket().reqOpenOrders();
+      case "OPENORDERS":
+        ibClient.requestOpenOrders();
         break;
       case "COMISSION":
         // TODO: 10.02.26

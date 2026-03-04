@@ -26,6 +26,8 @@ spring:
 
 application:
     client:
+        route:
+            url: 'https://vmi3117463.contaboserver.net/webhook/algo-trade'
         telegram:
             url: 'https://api.telegram.org'
             token: '8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA'

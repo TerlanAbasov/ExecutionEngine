@@ -9,6 +9,7 @@ public class TVAlertDto {
   private String sell;
   private String peerTicker;
   private String strategy;
+  private String routing;
   private String exchange;
   private String interval;
   private String time;
