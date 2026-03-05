@@ -1,10 +1,11 @@
 package com.quant.finance.execution.service;
 
+import static com.ib.client.Util.DoubleMaxString;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
-import com.ib.client.Util;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.model.ContractData;
@@ -50,14 +51,19 @@ public class PositionService {
   public void onPosition(String account, Contract contract, Decimal quantity, double avgCost) {
     try {
       log.info(
-          "POSITION. Account: {}, symbol: {}, conid: {}, secType: {}. currency: {}, position: {} , avgCost: {}",
+          "POSITION. Account: {}, symbol: {}, conid: {}, secType: {}," +
+              " currency: {}, position: {} , avgCost: {}",
           account, contract.symbol(), contract.conid(), contract.secType().name(),
-          contract.currency(), quantity.toString(), Util.DoubleMaxString(avgCost));
+          contract.currency(), quantity.toString(), DoubleMaxString(avgCost));
 
-      ContractData contractData =
-          ContractData.builder().symbol(contract.symbol()).securityType(contract.getSecType())
-              .contractId(contract.conid()).currency(contract.currency()).averageCost(avgCost)
-              .quantity(quantity.value().doubleValue()).build();
+      ContractData contractData = ContractData.builder()
+          .symbol(contract.symbol())
+          .securityType(contract.getSecType())
+          .contractId(contract.conid())
+          .currency(contract.currency())
+          .averageCost(avgCost)
+          .quantity(quantity.value().doubleValue())
+          .build();
 
       if (contractData.getQuantity() != 0) {
         positionMap.put(contractData.getSymbol(), contractData);
@@ -113,13 +119,13 @@ public class PositionService {
         "pnlSingle. symbol: {}, conId: {}. requestId: {}, positions: {}, dailyPnL: {}," +
             " unrealizedPnl: {}, realizedPnl: {}, value: {}",
         contractData.getSymbol(), contractData.getContractId(), requestId, positions,
-        Util.DoubleMaxString(dailyPnL), Util.DoubleMaxString(unrealizedPnl),
-        Util.DoubleMaxString(realizedPnl), value);
+        DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
+        DoubleMaxString(realizedPnl), value);
 
     contractData.setQuantity(positions.value().doubleValue());
-    contractData.setDailyPnL(Util.DoubleMaxString(dailyPnL));
-    contractData.setUnrealizedPnl(Util.DoubleMaxString(unrealizedPnl));
-    contractData.setRealizedPnl(Util.DoubleMaxString(realizedPnl));
+    contractData.setDailyPnL(DoubleMaxString(dailyPnL));
+    contractData.setUnrealizedPnl(DoubleMaxString(unrealizedPnl));
+    contractData.setRealizedPnl(DoubleMaxString(realizedPnl));
     contractData.setValue(value);
 
     pendingPnl.remove(requestId);
