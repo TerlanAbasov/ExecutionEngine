@@ -93,11 +93,11 @@ public class IBClient {
   }
 
   public static synchronized void setNextOrderId(int ibOrderId) {
-    int maxDBOrderId = orderService.findMaxBrokerOrderId();
-    if (ibOrderId >= maxDBOrderId) {
-      orderIds.set(ibOrderId);
-    } else {
+    Integer maxDBOrderId = orderService.findMaxBrokerOrderId();
+    if (maxDBOrderId != null && maxDBOrderId > ibOrderId) {
       orderIds.set(++maxDBOrderId);
+    } else {
+      orderIds.set(ibOrderId);
     }
   }
 

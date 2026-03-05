@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
   Optional<OrderEntity> findByBrokerOrderId(int brokerOrderId);
@@ -16,5 +17,7 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
 
   Optional<OrderEntity> findByExecutions_ExecId(String executionId);
 
-  Optional<Integer> findTopByOrderByBrokerOrderIdDesc();
+  @Query("SELECT MAX(o.brokerOrderId) FROM OrderEntity o")
+  Integer findMaxBrokerOrderId();
+
 }

@@ -66,7 +66,7 @@ public class OrderService {
 
   @Transactional(readOnly = true)
   public Integer findMaxBrokerOrderId() {
-    return repository.findTopByOrderByBrokerOrderIdDesc().orElse(0);
+    return repository.findMaxBrokerOrderId();
   }
 
   public OrderEntity buildAndSaveParentOrder(AlertEntity alert, StrategyEntity strategy,
