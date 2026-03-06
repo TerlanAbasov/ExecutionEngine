@@ -1,3 +1,4 @@
+- duplicated position come to telegram
 - sell/buy first peer symbol
 - end of day jobs. pnl, close positions and etc. according to strategy trade type(intraday, swing...)
 - prod credentials as env variables

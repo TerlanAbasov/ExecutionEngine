@@ -97,7 +97,7 @@ public class PositionService {
       //    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
       //notificationService.notify("Positions: " + message);
       positionMap.clear();
-      scheduler.schedule(this::checkSinglePnlCompletion, 3, TimeUnit.SECONDS);
+      scheduler.schedule(this::checkSinglePnlCompletion, 5, TimeUnit.SECONDS);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       notificationService.notify(e.getMessage());
@@ -145,6 +145,8 @@ public class PositionService {
     } catch (JsonProcessingException e) {
       log.error(e.getMessage(), e);
       notificationService.notify(e.getMessage());
+    } finally {
+      pnlMap.clear();
     }
   }
 
