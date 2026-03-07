@@ -48,11 +48,11 @@ public class PositionService {
     return positionsFuture;
   }
 
-  public void onPosition(String account, Contract contract, Decimal quantity, double avgCost) {
+  public void onPosition(String account, Contract contract, Decimal quantity,
+                         double avgCost) {
     try {
-      log.info(
-          "POSITION. Account: {}, symbol: {}, conid: {}, secType: {}," +
-              " currency: {}, position: {} , avgCost: {}",
+      log.info("POSITION. Account: {}, symbol: {}, conid: {}, secType: {}, currency: {}," +
+              " position: {} , avgCost: {}",
           account, contract.symbol(), contract.conid(), contract.secType().name(),
           contract.currency(), quantity.toString(), DoubleMaxString(avgCost));
 
@@ -72,8 +72,6 @@ public class PositionService {
       log.error(e.getMessage(), e);
       notificationService.notify(e.getMessage());
     }
-
-    //todo cancel open child orders when close parent order
   }
 
   public void onPositionEnd() {
@@ -84,18 +82,8 @@ public class PositionService {
         positionsFuture.complete(positionMap);
       }
 
-      positionMap.forEach((symbol, contractData) -> {
-        int requestId = EngineUtil.nextRequestId();
-        pnlMap.put(requestId, contractData);
-        pendingPnl.add(requestId);
+      requestPnLForPositions();
 
-        ibClient.requestSinglePnl(requestId, properties.getAccount().getId(), "",
-            contractData.getContractId());
-      });
-
-      //String message =
-      //    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
-      //notificationService.notify("Positions: " + message);
       positionMap.clear();
       scheduler.schedule(this::checkSinglePnlCompletion, 5, TimeUnit.SECONDS);
     } catch (Exception e) {
@@ -104,19 +92,32 @@ public class PositionService {
     }
   }
 
-  public void pnlSingle(int requestId, Decimal positions, double dailyPnL, double unrealizedPnl,
+  private void requestPnLForPositions() {
+    positionMap.forEach((symbol, contractData) -> {
+
+      int requestId = EngineUtil.nextRequestId();
+      pnlMap.put(requestId, contractData);
+      pendingPnl.add(requestId);
+
+      ibClient.requestSinglePnl(
+          requestId,
+          properties.getAccount().getId(),
+          "",
+          contractData.getContractId());
+    });
+  }
+
+  public void pnlSingle(int requestId, Decimal positions, double dailyPnL,
+                        double unrealizedPnl,
                         double realizedPnl, double value) {
-    //String message = String.format(
-    //    "PNL SINGLE. RequestId: %d, pos: %s, dailyPnl: %.2f, unrealizedPnl: %.2f, realizedPnL: %s, value: %.2f",
-    //    requestId, pos.toString(), dailyPnL, unrealizedPnl,
-    //    Util.DoubleMaxString(realizedPnl, "0.00"), value);
-    //
-    //log.info(message);
-    //notificationService.notify(message);
     ContractData contractData = pnlMap.get(requestId);
 
-    log.info(
-        "pnlSingle. symbol: {}, conId: {}. requestId: {}, positions: {}, dailyPnL: {}," +
+    if (contractData == null) {
+      log.error("Contract not found for requestId: {}", requestId);
+      return;
+    }
+
+    log.info("pnlSingle. symbol: {}, conId: {}. requestId: {}, positions: {}, dailyPnL: {}," +
             " unrealizedPnl: {}, realizedPnl: {}, value: {}",
         contractData.getSymbol(), contractData.getContractId(), requestId, positions,
         DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
@@ -133,9 +134,9 @@ public class PositionService {
   }
 
   private void checkSinglePnlCompletion() {
-    String message = null;
     try {
-      message = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
+      String message =
+          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
 
       if (pendingPnl.isEmpty()) {
         notificationService.notify("Positions: " + message);
@@ -143,7 +144,7 @@ public class PositionService {
         notificationService.notify("Partial snapshot received. Positions: " + message);
       }
     } catch (JsonProcessingException e) {
-      log.error(e.getMessage(), e);
+      log.error("Failed to serialize positions", e);
       notificationService.notify(e.getMessage());
     } finally {
       pnlMap.clear();
@@ -151,12 +152,6 @@ public class PositionService {
   }
 
   public void pnl(int requestId, double dailyPnL, double unrealizedPnl, double realizedPnl) {
-    //String message =
-    //    String.format("PNL. RequestId: %d, dailyPnl: %.2f, unrealizedPnl: %.2f, realizedPnl: %.2f",
-    //        requestId, dailyPnL, unrealizedPnl, realizedPnl);
-    //
-    //log.info(message);
-    //notificationService.notify(message);
   }
 
 }

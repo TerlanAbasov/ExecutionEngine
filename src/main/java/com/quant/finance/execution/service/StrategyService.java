@@ -23,53 +23,65 @@ public class StrategyService {
   private final TradeService tradeService;
 
   public void executeStrategy(AlertEntity alert) {
-    Optional<StrategyEntity> strategy = checkStrategy(alert);
-    if (strategy.isEmpty()) {
+    Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
+    if (optionalStrategy.isEmpty()) {
       return;
     }
 
-    Map<String, ContractData> positions = null;
+    StrategyEntity strategy = optionalStrategy.get();
+
+    Map<String, ContractData> positions;
     try {
       positions = positionService.requestPositions().get();
     } catch (Exception e) {
-      log.error(e.getMessage(), e);
+      log.error("Failed to request positions", e);
+      notificationService.notify("Failed to request positions: " + e.getMessage());
+      return;
     }
 
-    Double quantity =
-        positions.getOrDefault(alert.getSymbol(), ContractData.builder().quantity(0d).build())
-            .getQuantity();
+    ContractData existingPosition = positions.get(alert.getSymbol());
+    double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
 
-    if (quantity > 0 && Action.BUY.equals(alert.getAction())) {
-      String message = String.format("Can't buy existing symbol: %s, action: %s", alert.getSymbol(),
-          alert.getAction());
-      log.error(message);
-      notificationService.notify(message);
+    if (Action.BUY.equals(alert.getAction()) && existingQuantity > 0) {
+      logAndNotify("Can't buy existing symbol: %s, action: %s", alert);
       return;
-    } else if (quantity <= 0 && Action.SELL.equals(alert.getAction())) {
-      String message =
-          String.format("Can't sell non existing symbol: %s, action: %s", alert.getSymbol(),
-              alert.getAction());
-      log.error(message);
-      notificationService.notify(message);
+    } else if (Action.SELL.equals(alert.getAction()) && existingQuantity <= 0) {
+      logAndNotify("Can't sell non existing symbol: %s, action: %s", alert);
       return;
     }
 
     contractService.requestContract(alert.getSymbol())
         .thenAccept(contractDetails -> {
-          tradeService.trade(alert, strategy.get(), contractDetails, quantity);
+          tradeService.trade(alert, strategy, contractDetails, existingQuantity);
+        })
+        .exceptionally(ex -> {
+          log.error("Contract request failed for {}", alert.getSymbol(), ex);
+          notificationService.notify("Contract request failed: " + ex.getMessage());
+          return null;
         });
+  }
+
+  private void logAndNotify(String template, AlertEntity alert) {
+    String message = String.format(template + ", action: %s", alert.getSymbol(), alert.getAction());
+    log.error(message);
+    notificationService.notify(message);
   }
 
   public Optional<StrategyEntity> checkStrategy(AlertEntity alert) {
     Optional<StrategyEntity> optionalStrategy = repository.findByName(alert.getStrategy());
 
     if (optionalStrategy.isEmpty()) {
-      log.error("Strategy: '{}' does not exits.", alert.getStrategy());
-      notificationService.notify(
-          String.format("Strategy: '%s' does not exits.", alert.getStrategy()));
-    } else if (optionalStrategy.get().getMaxPositionAmount().compareTo(alert.getHigh()) == -1) {
+      String mesage = String.format("Strategy: '%s' not found", alert.getStrategy());
+      log.error(mesage);
+      notificationService.notify(mesage);
+      return Optional.empty();
+    }
+
+    StrategyEntity strategy = optionalStrategy.get();
+    if (strategy.getMaxPositionAmount().compareTo(alert.getHigh()) == -1) {
       log.error("Strategy: '{}'. MaxPositionAmount is less than price .", alert.getStrategy());
     }
+
     return optionalStrategy;
   }
 

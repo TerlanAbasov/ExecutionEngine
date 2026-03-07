@@ -29,13 +29,12 @@ public class ExecutionService {
 
     OrderEntity order =
         orderRepository.findByBrokerOrderId(execution.orderId())
-            .orElse(null);
+            .orElseGet(() -> {
+              logErrorAndNotify("Order not found with id: " + execution.orderId());
+              return null;
+            });
 
     if (order == null) {
-      String errorMessage = String.format("Order not found with id: %d", execution.orderId());
-      log.error(errorMessage);
-      notificationService.notify(errorMessage);
-
       return;
     }
 
@@ -44,24 +43,22 @@ public class ExecutionService {
         .price(new BigDecimal(DoubleMaxString(execution.price(), "0")))
         .filledQuantity(execution.shares().value().doubleValue())
         .currency(contract.currency())
+        .order(order)
         .build();
-
-    executionEntity.setOrder(order);
 
     try {
       executionRepository.save(executionEntity);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
-
-    //order.addExecution(executionEntity);
-    //orderRepository.save(order);
   }
 
   public void commissionAndFeesReport(CommissionAndFeesReport report) {
     log.info("COMMISSION AND FEES REPORT DETAILS. ExecutionId: {}, commissionAndFees: {}," +
-            " currency: {}, realizedPNL: {}, yield: {}, yieldRedemptionDate: {}", report.execId(),
-        DoubleMaxString(report.commissionAndFees()), report.currency(),
+            " currency: {}, realizedPNL: {}, yield: {}, yieldRedemptionDate: {}",
+        report.execId(),
+        DoubleMaxString(report.commissionAndFees()),
+        report.currency(),
         DoubleMaxString(report.realizedPNL()),
         DoubleMaxString(report.yield()),
         report.yieldRedemptionDate());
@@ -71,13 +68,12 @@ public class ExecutionService {
 
     ExecutionEntity executionEntity =
         executionRepository.findByExecId(String.valueOf(report.execId()))
-            .orElse(null);
+            .orElseGet(() -> {
+              logErrorAndNotify("Execution not found with execId: " + report.execId());
+              return null;
+            });
 
     if (executionEntity == null) {
-      String errorMessage = String.format("Execution not found with execId: %s", report.execId());
-      log.error(errorMessage);
-      notificationService.notify(errorMessage);
-
       return;
     }
 
@@ -102,10 +98,15 @@ public class ExecutionService {
     }
 
     if (execution.getCommission() != null) {
-      amount.add(execution.getCommission());
+      amount = amount.add(execution.getCommission());
     }
 
     return amount;
+  }
+
+  private void logErrorAndNotify(String errorMessage) {
+    log.error(errorMessage);
+    notificationService.notify(errorMessage);
   }
 
 }

@@ -42,3 +42,6 @@ application:
         count: 1
     account:
         id: DU8704817
+    params:
+        pairTickerThreadSleep: 2000
+        contractFutureTimeout: 60

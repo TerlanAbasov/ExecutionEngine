@@ -5,7 +5,6 @@ import static com.ib.client.OrderStatus.PendingSubmit;
 import static com.ib.client.OrderStatus.PreSubmitted;
 import static com.ib.client.OrderStatus.Submitted;
 
-import com.ib.client.Contract;
 import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
 import com.ib.client.OrderStatus;
@@ -70,7 +69,8 @@ public class OrderService {
   }
 
   public OrderEntity buildAndSaveParentOrder(AlertEntity alert, StrategyEntity strategy,
-                                             ContractDetails contractDetails, double existingQuantity) {
+                                             ContractDetails contractDetails,
+                                             double existingQuantity) {
     OrderEntity order = OrderEntity.builder()
         .brokerOrderId(IBClient.getNextOrderId())
         .strategy(strategy)
@@ -85,7 +85,6 @@ public class OrderService {
     if (alert.getAction() == Action.BUY) {
       order.setOrderType(strategy.getBuyOrderType());
       if (strategy.getBuyOrderType() == OrderType.LMT) {
-        //setParentLimitPrice(order, alert);
         order.setLimitPrice(alert.getClose().multiply(strategy.getBuyLimitCeiling()));
       }
       order.setQuantity(calculateQuantity(strategy, alert));
@@ -93,23 +92,16 @@ public class OrderService {
       order.setStopLossPrice(calculateStopLossPrice(strategy, alert));
     } else if (alert.getAction() == Action.SELL) {
       order.setOrderType(strategy.getSellOrderType());
+      order.setQuantity(existingQuantity);
+
       if (strategy.getSellOrderType() == OrderType.LMT) {
         order.setLimitPrice(alert.getOpen().multiply(strategy.getSellLimitFloor()));
       }
-      order.setQuantity(existingQuantity);
     }
 
     order = repository.save(order);
 
     return order;
-  }
-
-  private void setParentLimitPrice(OrderEntity order, AlertEntity alert) {
-    //todo
-    BigDecimal price =
-        (alert.getOpen().add(alert.getClose())).divide(BigDecimal.TWO, RoundingMode.CEILING);
-
-    order.setLimitPrice(price);
   }
 
   public OrderEntity buildAndSaveChildOrder(OrderEntity parentOrder, OrderType orderType,

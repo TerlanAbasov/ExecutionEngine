@@ -20,14 +20,10 @@ public class NotificationService {
   private final ApplicationProperties properties;
 
   public void notify(TVAlertDto alert) {
-
     if (properties.getClient().getTelegram().isEnabled()) {
-      //telegramClient.sendMessage("8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA", "1014578999",
-      //    message);
-
       try {
         String message = convertToJson(alert);
-        log.debug("Sending notification: {}", message);
+        logMessage(message);
 
         SendMessage msg = SendMessage.builder()
             .chatId(properties.getClient().getTelegram().getChatId())
@@ -43,10 +39,7 @@ public class NotificationService {
 
   public void notify(String message) {
     if (properties.getClient().getTelegram().isEnabled()) {
-      //telegramClient.sendMessage("8068983143:AAGyxjjqig8ZJAjBFuxdg8Obwy-Y41OKCdA", "1014578999",
-      //    message);
-
-      log.debug("Sending notification: {}", message);
+      logMessage(message);
 
       SendMessage msg = SendMessage.builder()
           .chatId(properties.getClient().getTelegram().getChatId())
@@ -64,6 +57,10 @@ public class NotificationService {
   public String convertToJson(TVAlertDto model) throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();
     return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(model);
+  }
+
+  private void logMessage(String message) {
+    log.debug("Sending notification: {}", message);
   }
 
   @PreDestroy

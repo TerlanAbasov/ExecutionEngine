@@ -99,12 +99,4 @@ public class OrderEntity {
     this.executions.add(execution);
     execution.setOrder(this);
   }
-
-  //public void setAlert(AlertEntity alert) {
-  //  this.alert = alert;
-  //if (alert != null) {
-  //  alert.addOrder(this);
-  //}
-  //}
-
 }

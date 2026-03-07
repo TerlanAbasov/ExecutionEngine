@@ -38,7 +38,6 @@ public class TradeService {
   @Transactional
   public void trade(AlertEntity alert, StrategyEntity strategy, ContractDetails contractDetails,
                     double existingQuantity) {
-    //todo if quantity is zero do not trade
     try {
       OrderEntity parentOrderEntity =
           orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingQuantity);
@@ -46,15 +45,7 @@ public class TradeService {
       ibClient.placeOrder(contractDetails.contract(), parentOrder);
 
       if (parentOrder.action() == Action.BUY) {
-        OrderEntity tpOrderEntity =
-            orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.LMT, Action.SELL);
-        Order tpOrder = createChildOrder(tpOrderEntity, parentOrder, contractDetails);
-        ibClient.placeOrder(contractDetails.contract(), tpOrder);
-
-        OrderEntity slOrderEntity =
-            orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.STP, Action.SELL);
-        Order slOrder = createChildOrder(slOrderEntity, parentOrder, contractDetails);
-        ibClient.placeOrder(contractDetails.contract(), slOrder);
+        pleaceBacketOrders(contractDetails, parentOrderEntity, parentOrder);
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -62,63 +53,84 @@ public class TradeService {
     }
   }
 
+  private void pleaceBacketOrders(ContractDetails contractDetails, OrderEntity parentOrderEntity,
+                                  Order parentOrder) {
+    OrderEntity tpOrderEntity =
+        orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.LMT, Action.SELL);
+
+    Order tpOrder = createChildOrder(tpOrderEntity, parentOrder, contractDetails);
+    ibClient.placeOrder(contractDetails.contract(), tpOrder);
+
+    OrderEntity slOrderEntity =
+        orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.STP, Action.SELL);
+
+    Order slOrder = createChildOrder(slOrderEntity, parentOrder, contractDetails);
+    ibClient.placeOrder(contractDetails.contract(), slOrder);
+  }
+
   public Order createParentOrder(OrderEntity orderEntity, ContractDetails contractDetails) {
-    Order order = new Order();
-    setOrderId(orderEntity, order);
-    order.action(orderEntity.getAction().name());
-    order.orderType(orderEntity.getOrderType().name());
-    order.totalQuantity(Decimal.get(orderEntity.getQuantity()));
+    Order order = baseOrder(orderEntity);
     order.tif(TimeInForce.DAY);
 
     if (order.action() == Action.BUY) {
-      if (order.orderType() == OrderType.LMT) {
-        double limitPrice = orderEntity.getLimitPrice().doubleValue();
-        order.lmtPrice(
-            Math.round(limitPrice / contractDetails.minTick()) * contractDetails.minTick());
-      }
+      setLimitPrice(orderEntity, contractDetails, order);
       order.transmit(false);
     } else if (order.action() == Action.SELL) {
+      setAuxPrice(orderEntity, contractDetails, order);
       order.transmit(true);
-
-      if (order.orderType() == OrderType.LMT) {
-        double limitPrice = orderEntity.getLimitPrice().doubleValue();
-        order.auxPrice(
-            Math.round(limitPrice / contractDetails.minTick()) * contractDetails.minTick());
-      }
     }
 
     return order;
+  }
+
+  private void setAuxPrice(OrderEntity orderEntity, ContractDetails contractDetails, Order order) {
+    if (order.orderType() == OrderType.LMT) {
+      order.auxPrice(snapToTick(orderEntity.getLimitPrice().doubleValue(), contractDetails));
+    }
+  }
+
+  private void setLimitPrice(OrderEntity orderEntity, ContractDetails contractDetails,
+                             Order order) {
+    if (order.orderType() == OrderType.LMT) {
+      double limitPrice = orderEntity.getLimitPrice().doubleValue();
+      order.lmtPrice(snapToTick(orderEntity.getLimitPrice().doubleValue(), contractDetails));
+    }
   }
 
   public Order createChildOrder(OrderEntity orderEntity, Order parent,
                                 ContractDetails contractDetails) {
-    String ocaGroup = "BRACKET_" + parent.orderId();
+    Order order = baseOrder(orderEntity);
 
-    Order order = new Order();
     order.parentId(parent.orderId());
-    setOrderId(orderEntity, order);
-    order.action(orderEntity.getAction().name());
-    order.orderType(orderEntity.getOrderType().name());
-    order.totalQuantity(Decimal.get(orderEntity.getQuantity()));
     order.tif(TimeInForce.GTC);
-    order.ocaGroup(ocaGroup);
+    order.ocaGroup("BRACKET_" + parent.orderId());
     order.ocaType(1);
 
     if (order.orderType() == OrderType.LMT) {
+      order.lmtPrice(snapToTick(orderEntity.getTakeProfitPrice().doubleValue(), contractDetails));
       order.transmit(false);
-      double limitPrice = orderEntity.getTakeProfitPrice().doubleValue();
-      order.lmtPrice(
-          Math.round(limitPrice / contractDetails.minTick()) * contractDetails.minTick());
     } else if (order.orderType() == OrderType.STP) {
+      order.auxPrice(snapToTick(orderEntity.getStopLossPrice().doubleValue(), contractDetails));
       order.transmit(true);
-      double auxPrice = orderEntity.getStopLossPrice().doubleValue();
-      order.auxPrice(Math.round(auxPrice / contractDetails.minTick()) * contractDetails.minTick());
     }
+
     return order;
   }
 
-  private void setOrderId(OrderEntity orderEntity, Order order) {
-    order.orderId(orderEntity.getBrokerOrderId());
+  private Order baseOrder(OrderEntity entity) {
+
+    Order order = new Order();
+    order.orderId(entity.getBrokerOrderId());
+    order.action(entity.getAction().name());
+    order.orderType(entity.getOrderType().name());
+    order.totalQuantity(Decimal.get(entity.getQuantity()));
+
+    return order;
+  }
+
+  private double snapToTick(double price, ContractDetails contractDetails) {
+    double tick = contractDetails.minTick();
+    return Math.round(price / tick) * tick;
   }
 
   public void cancelOrder(OrderCancelDto dto) {
