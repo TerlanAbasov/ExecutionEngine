@@ -13,6 +13,7 @@ import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.service.EWrapperImpl;
 import com.quant.finance.execution.service.NotificationService;
 import com.quant.finance.execution.service.OrderService;
+import com.quant.finance.execution.util.EngineUtil;
 import jakarta.annotation.PostConstruct;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class IBClient {
-  private static final AtomicInteger orderIds =
-      new AtomicInteger(current().nextInt(1, Integer.MAX_VALUE));
+  private static final AtomicInteger orderIds = new AtomicInteger(current()
+      .nextInt(1, Integer.MAX_VALUE));
   private static EClientSocket eClientSocket = null;
 
   private final EWrapperImpl eWrapper;
@@ -138,6 +139,10 @@ public class IBClient {
 
   public void cancelOrder(int orderId, OrderCancel orderCancel) {
     eClientSocket.cancelOrder(orderId, orderCancel);
+  }
+
+  public void requestPnl(int requestId, String accountId) {
+    eClientSocket.reqPnL(requestId, accountId, "");
   }
 
   public void requestSinglePnl(int requestId, String accountId, String s, int conId) {

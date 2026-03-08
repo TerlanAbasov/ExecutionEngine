@@ -1,7 +1,7 @@
 package com.quant.finance.execution.controller;
 
-import com.quant.finance.execution.dto.AccountCommandDto;
-import com.quant.finance.execution.service.AccountCommandService;
+import com.quant.finance.execution.dto.TradeCommandDto;
+import com.quant.finance.execution.service.CommandDispatcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,14 +10,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/account")
+@RequestMapping("/api/v1/trade")
 @RequiredArgsConstructor
-public class AccountController {
-  private final AccountCommandService commandService;
+public class TradeController {
+  private final CommandDispatcher commandDispatcher;
 
   @PostMapping("/command")
-  public ResponseEntity<Void> onUpdate(@RequestBody AccountCommandDto commandDto) {
-    commandService.executeCommand(commandDto);
-    return ResponseEntity.ok().build();
+  public ResponseEntity<String> executeCommand(@RequestBody TradeCommandDto commandDto) {
+    return ResponseEntity.ok(commandDispatcher.dispatch(commandDto));
   }
 }

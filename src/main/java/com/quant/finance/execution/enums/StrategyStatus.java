@@ -1,4 +1,4 @@
-package com.quant.finance.execution.model;
+package com.quant.finance.execution.enums;
 
 public enum StrategyStatus {
   ACTIVE, STOPPED, DELETED

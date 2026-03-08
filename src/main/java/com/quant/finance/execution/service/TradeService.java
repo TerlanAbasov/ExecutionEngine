@@ -155,35 +155,20 @@ public class TradeService {
     }
   }
 
-  public OrderResult buy(String symbol, Double quantity) {
-    log.info("Engine: BUY {} {}", quantity, symbol);
-    // TODO: call your engine
-    return OrderResult.builder()
-        .success(true).symbol(symbol).side(Action.BUY)
-        .quantity(quantity).orderId("ORD-001")
-        .message("Buy order placed successfully").build();
+  public void buy(String symbol, Double quantity) {
+   //todo
   }
 
-  public OrderResult sell(String symbol, Double quantity) {
-    log.info("Engine: SELL {} {}", quantity, symbol);
-    return OrderResult.builder()
-        .success(true).symbol(symbol).side(Action.SELL)
-        .quantity(quantity).orderId("ORD-002")
-        .message("Sell order placed successfully").build();
+  public void sell(String symbol, Double quantity) {
+
   }
 
-  public OrderResult closeAllPositions() {
-    log.info("Engine: CLOSE ALL");
-    return OrderResult.builder()
-        .success(true).message("All positions closed").build();
+  public void closeAllPositions() {
+
   }
 
-  public OrderResult placeOpenOrder(String symbol, Action action, Double quantity, Double price) {
-    log.info("Engine: OPEN ORDER {} {} {} @ {}", action.name(), quantity, symbol, price);
-    return OrderResult.builder()
-        .success(true).symbol(symbol).side(action)
-        .quantity(quantity).price(price).orderId("ORD-003")
-        .message("Open order placed successfully").build();
+  public void placeOpenOrder(String symbol, Action action, Double quantity, Double price) {
+
   }
 
 }

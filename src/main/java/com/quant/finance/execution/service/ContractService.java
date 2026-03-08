@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class ContractService {
-  @Lazy
   private final IBClient ibClient;
   private final NotificationService notificationService;
   private final ApplicationProperties properties;

@@ -4,7 +4,7 @@ import static jakarta.persistence.EnumType.STRING;
 
 import com.ib.client.OrderType;
 import com.quant.finance.execution.enums.StrategyType;
-import com.quant.finance.execution.model.PositionType;
+import com.quant.finance.execution.enums.PositionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
