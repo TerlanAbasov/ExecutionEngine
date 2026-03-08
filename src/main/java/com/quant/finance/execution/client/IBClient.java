@@ -9,12 +9,16 @@ import com.ib.client.EReader;
 import com.ib.client.Order;
 import com.ib.client.OrderCancel;
 import com.ib.client.Util;
+import com.ib.controller.AccountSummaryTag;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.service.EWrapperImpl;
 import com.quant.finance.execution.service.NotificationService;
 import com.quant.finance.execution.service.OrderService;
 import com.quant.finance.execution.util.EngineUtil;
 import jakarta.annotation.PostConstruct;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +31,9 @@ import org.springframework.stereotype.Service;
 public class IBClient {
   private static final AtomicInteger orderIds = new AtomicInteger(current()
       .nextInt(1, Integer.MAX_VALUE));
+
+  private static final List<Integer> accountSummaryRequestIds = new CopyOnWriteArrayList<>();
+
   private static EClientSocket eClientSocket = null;
 
   private final EWrapperImpl eWrapper;
@@ -59,15 +66,18 @@ public class IBClient {
     new Thread(() -> {
       while (eClientSocket.isConnected()) {
         signal.waitForSignal();
-        log.info("Waiting for signal");
+        //log.info("Waiting for signal");
         try {
           reader.processMsgs();
-          log.info("Processing Messages");
+          //log.info("Processing Messages");
         } catch (Exception e) {
           log.error(e.getMessage(), e);
         }
       }
     }).start();
+
+    //todo
+    //startAccountUpdates();
   }
 
   public static void startAPI() {
@@ -128,31 +138,113 @@ public class IBClient {
   }
 
   public void getContractDetails(int id, Contract contract) {
+    log.info("Getting contract details");
     eClientSocket.reqContractDetails(id, contract);
   }
 
   public void getMarketData(Contract contract) {
+    log.info("Requesting market data");
     eClientSocket.reqMarketDataType(1);
     eClientSocket.reqMktData(current().nextInt(), contract, "", false, false,
         null);
   }
 
   public void cancelOrder(int orderId, OrderCancel orderCancel) {
+    log.info("Cancel order with orderId: {}", orderId);
     eClientSocket.cancelOrder(orderId, orderCancel);
   }
 
-  public void requestPnl(int requestId, String accountId) {
+  public void requestPnl() {
+    int requestId = EngineUtil.nextRequestId();
+    String accountId = properties.getAccount().getId();
+
+    log.info("Requesting pnl. requestId: {}", requestId);
     eClientSocket.reqPnL(requestId, accountId, "");
   }
 
-  public void requestSinglePnl(int requestId, String accountId, String s, int conId) {
+  public void requestSinglePnl(int requestId, String accountId, String modelCode, int conId) {
+    log.info("Requesting single PNL. requestId: {}, accountId: {}, modelCode: {},conId: {}",
+        requestId, accountId, modelCode, conId);
+    eClientSocket.reqPnLSingle(requestId, accountId, modelCode, conId);
+  }
+
+  public void requestSinglePnl(int conId) {
+    int requestId = EngineUtil.nextRequestId();
+    String accountId = properties.getAccount().getId();
+
     log.info("Requesting single PNL. requestId: {}, accountId: {}, conId: {}", requestId, accountId,
         conId);
 
-    eClientSocket.reqPnLSingle(requestId, accountId, s, conId);
+    eClientSocket.reqPnLSingle(requestId, accountId, "", conId);
   }
 
   public void requestOpenOrders() {
+    log.info("Requesting open orders");
     eClientSocket.reqOpenOrders();
+  }
+
+  public void requestAccountUpdates() {
+    log.info("Requesting Account Updates");
+    eClientSocket.reqAccountUpdates(true, properties.getAccount().getId());
+  }
+
+  public void cancelAccountUpdates() {
+    log.info("Cancelling Account Updates");
+    eClientSocket.reqAccountUpdates(true, properties.getAccount().getId());
+  }
+
+  public void requestAccountSummary() {
+    log.info("Requesting Account Summary");
+
+    if (!accountSummaryRequestIds.isEmpty()) {
+      log.warn("There is existing Account Summary Request");
+      return;
+    }
+
+    int requestId = EngineUtil.nextRequestId();
+    accountSummaryRequestIds.add(requestId);
+
+    eClientSocket.reqAccountSummary(requestId, "All",
+        neededAccountSummaryTags());
+  }
+
+  public void cancelAccountSummary() {
+    log.info("Cancelling Account Summary");
+
+    accountSummaryRequestIds.forEach(eClientSocket::cancelAccountSummary);
+    accountSummaryRequestIds.clear();
+  }
+
+  private String neededAccountSummaryTags() {
+    StringBuilder builder = new StringBuilder();
+
+    //builder.append(AccountSummaryTag.AccountType.name());
+    //builder.append(", " + AccountSummaryTag.AvailableFunds.name());
+    //builder.append(", " + AccountSummaryTag.NetLiquidation.name());
+    //builder.append(", " + AccountSummaryTag.TotalCashValue.name());
+    //builder.append(", " + AccountSummaryTag.BuyingPower.name());
+
+    List<String> tagList = neededAccountSummaryTagList();
+
+    for (int i = 0; i < tagList.size(); i++) {
+      String tag = tagList.get(i);
+
+      if (i == 0) {
+        builder.append(tag);
+      } else {
+        builder.append("," + tag);
+      }
+    }
+
+    return builder.toString();
+  }
+
+  public static List<String> neededAccountSummaryTagList() {
+    return Arrays.asList(
+        AccountSummaryTag.AvailableFunds.name(),
+        AccountSummaryTag.NetLiquidation.name(),
+        AccountSummaryTag.TotalCashValue.name(),
+        AccountSummaryTag.BuyingPower.name()
+    );
   }
 }

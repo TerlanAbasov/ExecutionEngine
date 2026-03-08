@@ -3,19 +3,15 @@ package com.quant.finance.execution.service;
 import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
 import com.ib.client.Order;
-import com.ib.client.OrderCancel;
-import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
 import com.ib.client.Types.Action;
 import com.ib.client.Types.TimeInForce;
 import com.quant.finance.execution.client.IBClient;
-import com.quant.finance.execution.dto.OrderCancelDto;
+import com.quant.finance.execution.dto.TradeCommandDto;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
-import com.quant.finance.execution.model.OrderResult;
 import com.quant.finance.execution.repository.OrderRepository;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,42 +129,15 @@ public class TradeService {
     return Math.round(price / tick) * tick;
   }
 
-  public void cancelOrder(OrderCancelDto dto) {
-    if (dto.getOrderId() != null) {
-      orderService.findCancellableOrdersBySymbol(dto.getSymbol()).forEach(this::cancelIfIsActive);
-    } else {
-      Optional<OrderEntity> order = orderService.findByBrokerOrderId(dto.getOrderId());
-      if (order.isPresent()) {
-        cancelIfIsActive(order.get());
-      }
-    }
+  public void buy(TradeCommandDto command) {
+    //todo
   }
 
-  private void cancelIfIsActive(OrderEntity order) {
-    if (order.getStatus().isActive() || order.getStatus() == OrderStatus.ApiPending) {
-      log.info("Cancelling order with id: {}, status: {}", order.getBrokerOrderId(),
-          order.getStatus());
-      ibClient.cancelOrder(order.getBrokerOrderId(), new OrderCancel());
-    } else {
-      log.info("Unable to cancel order with id: {}, status: {}", order.getBrokerOrderId(),
-          order.getStatus());
-    }
-  }
-
-  public void buy(String symbol, Double quantity) {
-   //todo
-  }
-
-  public void sell(String symbol, Double quantity) {
-
+  public void sell(TradeCommandDto command) {
+    //todo
   }
 
   public void closeAllPositions() {
-
+    //todo
   }
-
-  public void placeOpenOrder(String symbol, Action action, Double quantity, Double price) {
-
-  }
-
 }

@@ -1,7 +1,7 @@
 package com.quant.finance.execution.service;
 
-import com.quant.finance.execution.enums.BotCommand;
 import com.quant.finance.execution.dto.TradeCommandDto;
+import com.quant.finance.execution.enums.BotCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +21,14 @@ public class CommandParserService {
       case "/positions" -> new TradeCommandDto(BotCommand.POSITIONS, chatId, text);
       case "/pnl" -> new TradeCommandDto(BotCommand.PNL, chatId, text);
       case "/pnlsingle" -> parseTrade(BotCommand.PNL_SINGLE, parts, chatId, text);
-      case "/accountsummary" -> new TradeCommandDto(BotCommand.ACCOUNT_SUMMARY, chatId, text);
-      case "/accountupdates" -> new TradeCommandDto(BotCommand.ACCOUNT_UPDATES, chatId, text);
+      case "/startaccountsummary" ->
+          new TradeCommandDto(BotCommand.START_ACCOUNT_SUMMARY, chatId, text);
+      case "/stopaccountsummary" ->
+          new TradeCommandDto(BotCommand.STOP_ACCOUNT_SUMMARY, chatId, text);
+      case "/startaccountupdates" ->
+          new TradeCommandDto(BotCommand.START_ACCOUNT_UPDATES, chatId, text);
+      case "/stopaccountupdates" ->
+          new TradeCommandDto(BotCommand.STOP_ACCOUNT_UPDATES, chatId, text);
       case "/buy" -> parseTrade(BotCommand.BUY, parts, chatId, text);
       case "/sell" -> parseTrade(BotCommand.SELL, parts, chatId, text);
       case "/closeall" -> new TradeCommandDto(BotCommand.CLOSE_ALL, chatId, text);
@@ -42,6 +48,7 @@ public class CommandParserService {
       //      .chatId(chatId).rawText(text).build();
       //}
       case "/cancelorder" -> parseTrade(BotCommand.CANCEL_ORDER, parts, chatId, text);
+      case "/cancelopenorders" -> parseTrade(BotCommand.CANCEL_OPEN_ORDERS, parts, chatId, text);
       default -> unknown(text, chatId);
     };
   }

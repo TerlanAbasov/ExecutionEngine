@@ -113,23 +113,29 @@ public class PositionService {
     ContractData contractData = pnlMap.get(requestId);
 
     if (contractData == null) {
-      log.error("Contract not found for requestId: {}", requestId);
+      log.warn("Contract not found for requestId: {}", requestId);
+      log.info("pnlSingle. requestId: {}, positions: {}, dailyPnL: {}," +
+              " unrealizedPnl: {}, realizedPnl: {}, value: {}",
+          requestId, positions, DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
+          DoubleMaxString(realizedPnl), value);
       return;
+    } else {
+
+      log.info("pnlSingle. symbol: {}, conId: {}. requestId: {}, positions: {}, dailyPnL: {}," +
+              " unrealizedPnl: {}, realizedPnl: {}, value: {}",
+          contractData.getSymbol(), contractData.getContractId(), requestId, positions,
+          DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
+          DoubleMaxString(realizedPnl), value);
+
+      contractData.setQuantity(positions.value().doubleValue());
+      contractData.setDailyPnL(DoubleMaxString(dailyPnL));
+      contractData.setUnrealizedPnl(DoubleMaxString(unrealizedPnl));
+      contractData.setRealizedPnl(DoubleMaxString(realizedPnl));
+      contractData.setValue(value);
+
+      pendingPnl.remove(requestId);
     }
 
-    log.info("pnlSingle. symbol: {}, conId: {}. requestId: {}, positions: {}, dailyPnL: {}," +
-            " unrealizedPnl: {}, realizedPnl: {}, value: {}",
-        contractData.getSymbol(), contractData.getContractId(), requestId, positions,
-        DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
-        DoubleMaxString(realizedPnl), value);
-
-    contractData.setQuantity(positions.value().doubleValue());
-    contractData.setDailyPnL(DoubleMaxString(dailyPnL));
-    contractData.setUnrealizedPnl(DoubleMaxString(unrealizedPnl));
-    contractData.setRealizedPnl(DoubleMaxString(realizedPnl));
-    contractData.setValue(value);
-
-    pendingPnl.remove(requestId);
     ibClient.getEClientSocket().cancelPnLSingle(requestId);
   }
 
@@ -152,6 +158,10 @@ public class PositionService {
   }
 
   public void pnl(int requestId, double dailyPnL, double unrealizedPnl, double realizedPnl) {
+    String message = String.format("PnL. dailyPnL: %f, unrealizedPnl: %f, realizedPnl: %f",
+        dailyPnL, unrealizedPnl, realizedPnl);
+    log.info(message);
+    notificationService.notify(message);
   }
 
 }

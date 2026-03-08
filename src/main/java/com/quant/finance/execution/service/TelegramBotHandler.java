@@ -50,5 +50,7 @@ public class TelegramBotHandler
 
     TradeCommandDto cmd = parserService.parse(text, chatId);
     String response = commandDispatcher.dispatch(cmd);
+
+    //todo if not needed delete response
   }
 }

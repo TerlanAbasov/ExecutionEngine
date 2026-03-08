@@ -7,6 +7,7 @@ import static com.ib.client.OrderStatus.Submitted;
 
 import com.ib.client.ContractDetails;
 import com.ib.client.Decimal;
+import com.ib.client.OrderCancel;
 import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
 import com.ib.client.Types.Action;
@@ -15,8 +16,8 @@ import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.repository.OrderRepository;
+import com.quant.finance.execution.util.EngineUtil;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +56,12 @@ public class OrderService {
   @Transactional(readOnly = true)
   public List<OrderEntity> findCancellableOrdersBySymbol(String symbol) {
     return repository.findBySymbolAndStatusIn(symbol, List.of(ApiPending, PreSubmitted, Submitted,
+        PendingSubmit));
+  }
+
+  @Transactional(readOnly = true)
+  public List<OrderEntity> findCancellableOrders() {
+    return repository.findByStatusIn(List.of(ApiPending, PreSubmitted, Submitted,
         PendingSubmit));
   }
 
@@ -143,7 +150,6 @@ public class OrderService {
 
     BigDecimal limitPrice = alert.getHigh().add(percentageValue);
 
-
     //todo optimize with ATR
     return limitPrice;
   }
@@ -155,7 +161,6 @@ public class OrderService {
             .divide(BigDecimal.valueOf(100));
 
     BigDecimal stopPrice = alert.getLow().subtract(percentageValue);
-
 
     //todo optimize with ATR
     return stopPrice;
@@ -199,6 +204,44 @@ public class OrderService {
       order.setSubmittedAt(LocalDateTime.now());
     } else if (OrderStatus.get(status) == OrderStatus.Filled) {
       order.setFilledAt(LocalDateTime.now());
+    }
+  }
+
+  @Transactional
+  public void cancelOrderBy(String identifier) {
+    if (EngineUtil.isDigit(identifier)) {
+      cancelOrderById(Integer.parseInt(identifier));
+    } else {
+      cancelOrderBySymbol(identifier);
+    }
+  }
+
+  @Transactional
+  private void cancelOrderById(int orderId) {
+    Optional<OrderEntity> order = findByBrokerOrderId(orderId);
+    if (order.isPresent()) {
+      cancelIfIsActive(order.get());
+    }
+  }
+
+  @Transactional
+  private void cancelOrderBySymbol(String symbol) {
+    findCancellableOrdersBySymbol(symbol).forEach(this::cancelIfIsActive);
+  }
+
+  @Transactional
+  public void cancelOpenOrders() {
+    findCancellableOrders().forEach(this::cancelIfIsActive);
+  }
+
+  private void cancelIfIsActive(OrderEntity order) {
+    if (order.getStatus().isActive() || order.getStatus() == OrderStatus.ApiPending) {
+      log.info("Cancelling order with id: {}, status: {}", order.getBrokerOrderId(),
+          order.getStatus());
+      ibClient.cancelOrder(order.getBrokerOrderId(), new OrderCancel());
+    } else {
+      log.info("Unable to cancel order with id: {}, status: {}", order.getBrokerOrderId(),
+          order.getStatus());
     }
   }
 

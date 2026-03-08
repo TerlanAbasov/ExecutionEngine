@@ -51,6 +51,7 @@ public class EWrapperImpl implements EWrapper {
   private final OrderService orderService;
   private final ExecutionService executionService;
   private final IBErrorHandler ibErrorHandler;
+  private final AccountService accountService;
 
   @Override
   public void tickPrice(int i, int i1, double v, TickAttrib tickAttrib) {
@@ -97,20 +98,27 @@ public class EWrapperImpl implements EWrapper {
   }
 
   @Override
-  public void updateAccountValue(String s, String s1, String s2, String s3) {
+  public void updateAccountValue(String key, String value, String currency, String accountName) {
+    accountService.updateAccountValue(key, value, currency, accountName);
   }
 
   @Override
-  public void updatePortfolio(Contract contract, Decimal decimal, double v, double v1, double v2,
-                              double v3, double v4, String s) {
+  public void updatePortfolio(Contract contract, Decimal position, double marketPrice,
+                              double marketValue, double averageCost, double unrealizedPNL,
+                              double realizedPNL, String accountName) {
+
+    accountService.updatePortfolio(contract, position, marketPrice, marketValue, averageCost,
+        unrealizedPNL, realizedPNL, accountName);
   }
 
   @Override
-  public void updateAccountTime(String s) {
+  public void updateAccountTime(String timestamp) {
+    accountService.updateAccountTime(timestamp);
   }
 
   @Override
-  public void accountDownloadEnd(String s) {
+  public void accountDownloadEnd(String account) {
+    accountService.accountDownloadEnd(account);
   }
 
   @Override

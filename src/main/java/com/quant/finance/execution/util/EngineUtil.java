@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class EngineUtil {
   public static synchronized int nextRequestId() {
-    return ThreadLocalRandom.current().nextInt();
+    return ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
   }
 
   public static BigDecimal doubleToBigDecimal(double value) {
@@ -15,5 +15,9 @@ public class EngineUtil {
 
   public static BigDecimal doubleToBigDecimal(double value, String defaultValue) {
     return new BigDecimal(Util.DoubleMaxString(value, defaultValue));
+  }
+
+  public static boolean isDigit(String s) {
+    return s != null && s.matches("\\d+");
   }
 }

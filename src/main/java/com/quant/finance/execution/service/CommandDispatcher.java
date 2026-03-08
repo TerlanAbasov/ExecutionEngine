@@ -3,7 +3,6 @@ package com.quant.finance.execution.service;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.dto.TradeCommandDto;
-import com.quant.finance.execution.util.EngineUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +14,8 @@ public class CommandDispatcher {
   private final IBClient iBClient;
   private final TradeService tradeService;
   private final ApplicationProperties properties;
+  private final OrderService orderService;
+  private final NotificationService notificationService;
 
   public String dispatch(TradeCommandDto cmd) {
     try {
@@ -24,24 +25,35 @@ public class CommandDispatcher {
           yield "📊 Open Positions will be sent";
         }
         case PNL -> {
-          iBClient.requestPnl(EngineUtil.nextRequestId(), properties.getAccount().getId());
+          iBClient.requestPnl();
           yield "📊 PnL will be sent";
         }
         case PNL_SINGLE -> {
+          iBClient.requestSinglePnl(Integer.parseInt(cmd.getIdentifier()));
           yield "📊 PnL Single will be sent";
         }
-        case ACCOUNT_SUMMARY -> {
+        case START_ACCOUNT_SUMMARY -> {
+          iBClient.requestAccountSummary();
           yield "📊 Account Summary will be sent";
         }
-        case ACCOUNT_UPDATES -> {
-          yield "📊 Account Updates will be sent";
+        case STOP_ACCOUNT_SUMMARY -> {
+          iBClient.cancelAccountSummary();
+          yield "📊 Account Summary will be sent";
+        }
+        case START_ACCOUNT_UPDATES -> {
+          iBClient.requestAccountUpdates();
+          yield "📊 Account Updates started";
+        }
+        case STOP_ACCOUNT_UPDATES -> {
+          iBClient.cancelAccountUpdates();
+          yield "📊 Account Updates stopped";
         }
         case BUY -> {
-          tradeService.buy(cmd.getIdentifier(), cmd.getQuantity());
+          tradeService.buy(cmd);
           yield "📊 Symbol will be bought";
         }
         case SELL -> {
-          tradeService.sell(cmd.getIdentifier(), cmd.getQuantity());
+          tradeService.sell(cmd);
           yield "📊 Symbol will be sold";
         }
         case CLOSE_ALL -> {
@@ -49,15 +61,23 @@ public class CommandDispatcher {
           yield "📊 Positions will be closed";
         }
         case OPEN_ORDERS -> {
-          tradeService.placeOpenOrder(
-              cmd.getIdentifier(), cmd.getAction(),
-              cmd.getQuantity(), cmd.getLimitPrice());
+          iBClient.requestOpenOrders();
           yield "📊 Open Orders will be sent";
         }
         case CANCEL_ORDER -> {
+          orderService.cancelOrderBy(cmd.getIdentifier());
           yield "📊 Order will be cancelled";
         }
-        case UNKNOWN -> " Unknown command : " + cmd.getCommand();
+        case CANCEL_OPEN_ORDERS -> {
+          orderService.cancelOpenOrders();
+          yield "📊 Open Orders will be cancelled";
+        }
+        case UNKNOWN -> {
+          String message = "Unknown command : " + cmd.getCommand();
+          log.warn(message);
+          notificationService.notify(message);
+          yield message;
+        }
       };
     } catch (Exception e) {
       log.error("Error dispatching command: {}", cmd, e);
