@@ -20,7 +20,7 @@ public class AlertRoutingService {
         routingClient.routeAlert(tvAlertDto);
       }
     } catch (Exception e) {
-      log.error(e.getMessage(), e);
+      log.error("Could route alert to partner. error message: {}", e.getMessage());
     }
   }
 }

@@ -26,6 +26,12 @@ public class TelegramBotHandler
   @PostConstruct
   public void init() {
     log.info("TelegramBotHandler initialized!");
+
+    //Update update = new Update();
+    //Message message = new Message();
+    //
+    //message.setText("/buy RKLX MACTest BUY 100 MKT 100 DAY");
+    //update.setMessage(message);
   }
 
   @Override
@@ -51,6 +57,6 @@ public class TelegramBotHandler
     TradeCommandDto cmd = parserService.parse(text, chatId);
     String response = commandDispatcher.dispatch(cmd);
 
-    //todo if not needed delete response
+    log.info(response);
   }
 }

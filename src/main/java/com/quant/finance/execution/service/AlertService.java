@@ -1,5 +1,6 @@
 package com.quant.finance.execution.service;
 
+import com.ib.client.Types;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.dto.TVAlertDto;
 import com.quant.finance.execution.entity.AlertEntity;
@@ -42,16 +43,43 @@ public class AlertService {
     routingService.routeToPartner(tvAlertDto);
 
     AlertEntity alert = repository.save(alertMapper.toEntity(tvAlertDto));
-    AlertEntity peerAlert = alert.duplicateForPeerTickerProcessing();
-    try {
-      strategyService.executeStrategy(peerAlert);
-      Thread.sleep(properties.getParams().getPairTickerThreadSleep());
-      strategyService.executeStrategy(alert);
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      notificationService.notify(
-          "Error while alert processing: " + e.getMessage());
+
+    if (alert.getPeerSymbol() == null || alert.getPeerSymbol().isBlank()) {
+      try {
+        strategyService.executeStrategy(alert);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        notificationService.notify(
+            "Error while alert processing: " + e.getMessage());
+      }
+
+      return;
     }
+
+    if (alert.getAction() == Types.Action.BUY) {
+      try {
+        AlertEntity peerAlert = alert.duplicateForPeerTickerProcessing();
+        strategyService.executeStrategy(peerAlert);
+        Thread.sleep(properties.getParams().getPairTickerThreadSleep());
+        strategyService.executeStrategy(alert);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        notificationService.notify(
+            "Error while alert processing: " + e.getMessage());
+      }
+    } else {
+      try {
+        strategyService.executeStrategy(alert);
+        Thread.sleep(properties.getParams().getPairTickerThreadSleep());
+        AlertEntity peerAlert = alert.duplicateForPeerTickerProcessing();
+        strategyService.executeStrategy(peerAlert);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        notificationService.notify(
+            "Error while alert processing: " + e.getMessage());
+      }
+    }
+
   }
 
   @Transactional

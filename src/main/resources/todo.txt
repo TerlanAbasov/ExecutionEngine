@@ -1,4 +1,5 @@
-- create entity for enabling/disabling trading
+- enhance security of app and server
+- create entity for enabling/disabling trading - kill switch
 - end of day jobs. pnl, close positions and etc. according to strategy trade type(intraday, swing...)
 - cancel open child orders when close parent order
 - prod credentials as env variables

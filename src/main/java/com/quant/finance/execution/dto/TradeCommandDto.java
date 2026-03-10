@@ -1,5 +1,6 @@
 package com.quant.finance.execution.dto;
 
+import com.ib.client.OrderType;
 import com.ib.client.Types.Action;
 import com.ib.client.Types.TimeInForce;
 import com.quant.finance.execution.enums.BotCommand;
@@ -18,7 +19,7 @@ public class TradeCommandDto {
   private String strategy;
   private Action action;
   private Double quantity;
-  private String orderType;
+  private OrderType orderType;
   private Double limitPrice;
   private TimeInForce tif;
   private Long chatId;

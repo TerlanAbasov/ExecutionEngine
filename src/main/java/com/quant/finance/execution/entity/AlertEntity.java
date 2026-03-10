@@ -38,7 +38,9 @@ public class AlertEntity {
   @Column(nullable = false, length = 20)
   private Action action;
   @Transient //todo add as column
-  private String peerTicker;
+  private String peerSymbol;
+  @Transient
+  private boolean isPeer;
   @Column(nullable = false, length = 200)
   private String strategy;
   @Column(length = 50)
@@ -70,7 +72,8 @@ public class AlertEntity {
         .id(this.id)
         .symbol(this.symbol)
         .action(this.action == Action.BUY ? Action.SELL : Action.BUY)
-        .peerTicker(this.peerTicker)
+        .peerSymbol(this.peerSymbol)
+        .isPeer(true)
         .strategy(this.strategy)
         .exchange(this.exchange)
         .interval(this.interval)

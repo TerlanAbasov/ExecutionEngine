@@ -43,10 +43,13 @@ public class StrategyService {
     double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
 
     if (Action.BUY.equals(alert.getAction()) && existingQuantity > 0) {
-      logAndNotify("Can't buy existing symbol: %s, action: %s", alert);
+      logAndNotify("Can't buy existing symbol: %s, peerSymbol: %s, action: %s, isPeer: %b",
+          alert);
       return;
     } else if (Action.SELL.equals(alert.getAction()) && existingQuantity <= 0) {
-      logAndNotify("Can't sell non existing symbol: %s, action: %s", alert);
+      logAndNotify("Can't sell non existing symbol: %s, peerSymbol: %s, action: %s," +
+              " isPeer: %b",
+          alert);
       return;
     }
 
@@ -62,7 +65,9 @@ public class StrategyService {
   }
 
   private void logAndNotify(String template, AlertEntity alert) {
-    String message = String.format(template + ", action: %s", alert.getSymbol(), alert.getAction());
+    String message =
+        String.format(template, alert.getSymbol(), alert.getPeerSymbol(), alert.getAction(),
+            alert.isPeer());
     log.error(message);
     notificationService.notify(message);
   }

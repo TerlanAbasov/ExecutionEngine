@@ -23,7 +23,7 @@ public interface AlertMapper {
 
   @Mapping(source = "ticker", target = "symbol")
   @Mapping(source = "tvAlertDto", target = "action", qualifiedByName = "determineAction")
-  @Mapping(source = "peerTicker", target = "peerTicker")
+  @Mapping(source = "peerTicker", target = "peerSymbol")
   @Mapping(source = "strategy", target = "strategy")
   @Mapping(source = "exchange", target = "exchange")
   @Mapping(source = "interval", target = "interval", qualifiedByName = "parseInterval")
@@ -39,6 +39,7 @@ public interface AlertMapper {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "isPeer", ignore = true)
   AlertEntity toEntity(TVAlertDto tvAlertDto);
 
   @Named("determineAction")
