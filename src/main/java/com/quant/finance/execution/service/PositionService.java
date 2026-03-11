@@ -79,7 +79,7 @@ public class PositionService {
 
     try {
       if (this.positionsFuture != null) {
-        positionsFuture.complete(positionMap);
+        positionsFuture.complete(Map.copyOf(positionMap));
       }
 
       requestPnLForPositions();

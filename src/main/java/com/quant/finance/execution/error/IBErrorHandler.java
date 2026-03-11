@@ -27,7 +27,7 @@ public class IBErrorHandler {
 
     if (List.of(2104, 2158, 2106).contains(code)) {
       if (!isConnectionOk) {
-        log.info("Connections is OK!");
+        log.info("Connections are OK!");
       }
 
       isConnectionOk = true;

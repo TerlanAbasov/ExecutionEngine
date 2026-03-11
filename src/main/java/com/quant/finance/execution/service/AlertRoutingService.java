@@ -18,6 +18,7 @@ public class AlertRoutingService {
     try {
       if (tvAlertDto.getRouting() != null && tvAlertDto.getRouting().equals("true")) {
         routingClient.routeAlert(tvAlertDto);
+        log.info("Alert routed successfully.");
       }
     } catch (Exception e) {
       log.error("Could route alert to partner. error message: {}", e.getMessage());
