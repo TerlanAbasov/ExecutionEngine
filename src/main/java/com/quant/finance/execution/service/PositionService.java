@@ -10,6 +10,7 @@ import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.model.ContractData;
 import com.quant.finance.execution.util.EngineUtil;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -41,11 +42,13 @@ public class PositionService {
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
   public CompletableFuture<Map<String, ContractData>> requestPositions() {
-    positionMap.clear();
-    positionsFuture = new CompletableFuture<>();
-    ibClient.requestPositions();
+    synchronized (this) {
+      positionMap.clear();
+      positionsFuture = new CompletableFuture<>();
+      ibClient.requestPositions();
 
-    return positionsFuture;
+      return positionsFuture;
+    }
   }
 
   public void onPosition(String account, Contract contract, Decimal quantity,
@@ -78,11 +81,13 @@ public class PositionService {
     log.info("POSITION END");
 
     try {
+      Map<String, ContractData> snapshot = new HashMap<>(positionMap);
+
       if (this.positionsFuture != null) {
-        positionsFuture.complete(Map.copyOf(positionMap));
+        positionsFuture.complete(snapshot);
       }
 
-      requestPnLForPositions();
+      requestPnLForPositions(snapshot);
 
       positionMap.clear();
       scheduler.schedule(this::checkSinglePnlCompletion, 5, TimeUnit.SECONDS);
@@ -92,8 +97,8 @@ public class PositionService {
     }
   }
 
-  private void requestPnLForPositions() {
-    positionMap.forEach((symbol, contractData) -> {
+  private void requestPnLForPositions(Map<String, ContractData> snapshot) {
+    snapshot.forEach((symbol, contractData) -> {
 
       int requestId = EngineUtil.nextRequestId();
       pnlMap.put(requestId, contractData);

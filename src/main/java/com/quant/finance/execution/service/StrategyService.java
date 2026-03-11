@@ -42,13 +42,15 @@ public class StrategyService {
     ContractData existingPosition = positions.get(alert.getSymbol());
     double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
 
+    log.info("Sell validation. alertSymbol={}, existingPosition={}, allSymbols={}",
+        alert.getSymbol(), existingPosition, positions.keySet());
+
     if (Action.BUY.equals(alert.getAction()) && existingQuantity > 0) {
-      logAndNotify("Can't buy existing symbol: %s, peerSymbol: %s, action: %s, isPeer: %b",
+      logAndNotify("Can't buy existing symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
           alert);
       return;
     } else if (Action.SELL.equals(alert.getAction()) && existingQuantity <= 0) {
-      logAndNotify("Can't sell non existing symbol: %s, peerSymbol: %s, action: %s," +
-              " isPeer: %b",
+      logAndNotify("Can't sell non existing symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
           alert);
       return;
     }
