@@ -86,6 +86,27 @@ public class IBClient {
     }
   }
 
+  public void reconnect() {
+    eClientSocket.eDisconnect();
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      log.error(e.getMessage(), e);
+    }
+    connect();
+  }
+
+
+  public void reconnectWithSleep() {
+    eClientSocket.eDisconnect();
+    try {
+      Thread.sleep(60000);
+    } catch (InterruptedException e) {
+      log.error(e.getMessage(), e);
+    }
+    connect();
+  }
+
   public void disconnect() {
     eClientSocket.eDisconnect();
   }

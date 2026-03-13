@@ -123,7 +123,7 @@ public class OrderService {
         .quantity(parentOrder.getQuantity())
         .status(ApiPending)
         .orderType(orderType)
-        .parentOrderId(parentOrder.getId())
+        .parentOrderId(parentOrder.getBrokerOrderId())
         .build();
 
     if (orderType == OrderType.LMT) {

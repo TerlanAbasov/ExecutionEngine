@@ -2,6 +2,7 @@ package com.quant.finance.execution.error;
 
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.entity.OrderEntity;
+import com.quant.finance.execution.service.NotificationService;
 import com.quant.finance.execution.service.OrderService;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ public class IBErrorHandler {
   @Autowired
   private IBClient ibClient;
   private final OrderService orderService;
+  private final NotificationService notificationService;
 
   private static boolean isConnectionOk = false;
 
@@ -33,10 +35,15 @@ public class IBErrorHandler {
       isConnectionOk = true;
     } else if (List.of(2107, 2108, 1101, 1102).contains(code)) {
       log.info("INFO. {}", errorText);
-    } else if (List.of(326, 502, 504, 507, 1100, 2110).contains(code)) {
+    } else if (List.of(502, 504, 507, 1100, 2110).contains(code)) {
       log.error("CONNECTION ERROR. {}", errorText);
-      ibClient.disconnect();
-      ibClient.connect();
+      ibClient.reconnectWithSleep();
+    } else if (List.of(1100, 2110).contains(code)) {
+      log.error("CONNECTION ERROR. {}", errorText);
+      ibClient.reconnect();
+    } else if (code == 326) {
+      log.info("ERROR. {}", errorText);
+      notificationService.notify(errorText);
     } else if (code == 399) {
       log.info("ERROR. {}", errorText);
     } else {

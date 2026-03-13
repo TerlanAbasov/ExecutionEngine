@@ -125,7 +125,9 @@ public class TradeService {
   }
 
   private double snapToTick(double price, ContractDetails contractDetails) {
-    double tick = contractDetails.minTick();
+    //todo Upgrade to MarketRule tick system
+    //double tick = contractDetails.minTick();
+    double tick = price >= 1 ? 0.01 : 0.0001;
     return Math.round(price / tick) * tick;
   }
 
