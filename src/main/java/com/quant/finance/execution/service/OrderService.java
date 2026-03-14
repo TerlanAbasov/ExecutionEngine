@@ -170,7 +170,7 @@ public class OrderService {
                           double avgFillPrice, long l, int i1, double v1, int i2, String s1,
                           double v2) {
     String message = String.format(
-        "ORDER STATUS. orderId: %d, status: %s, filled: %d, remaining: %d, avgPrice: %f", orderId,
+        "ORDER STATUS. orderId=%d, status=%s, filled=%d, remaining=%d, avgPrice=%f", orderId,
         status, filled.longValue(), remaining.longValue(), avgFillPrice);
 
     log.info(message);
@@ -188,7 +188,7 @@ public class OrderService {
         setDateTimes(order.get(), status);
         repository.save(order.get());
       } else {
-        String errorMessage = String.format("Order not found with id: %d", orderId);
+        String errorMessage = String.format("Order not found with id=%d", orderId);
         log.error(errorMessage);
         //notificationService.notify(errorMessage);
       }
@@ -236,11 +236,11 @@ public class OrderService {
 
   private void cancelIfIsActive(OrderEntity order) {
     if (order.getStatus().isActive() || order.getStatus() == OrderStatus.ApiPending) {
-      log.info("Cancelling order with id: {}, status: {}", order.getBrokerOrderId(),
+      log.info("Cancelling order with id={}, status={}", order.getBrokerOrderId(),
           order.getStatus());
       ibClient.cancelOrder(order.getBrokerOrderId(), new OrderCancel());
     } else {
-      log.info("Unable to cancel order with id: {}, status: {}", order.getBrokerOrderId(),
+      log.info("Unable to cancel order with id={}, status={}", order.getBrokerOrderId(),
           order.getStatus());
     }
   }

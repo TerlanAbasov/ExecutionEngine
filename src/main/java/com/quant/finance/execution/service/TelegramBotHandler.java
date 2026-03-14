@@ -52,7 +52,7 @@ public class TelegramBotHandler
 
     Long chatId = update.getMessage().getChatId();
     String text = update.getMessage().getText();
-    log.info("\uD83D\uDCE9 '{}' command received from chatId: {}", text, chatId);
+    log.info("\uD83D\uDCE9 '{}' command received from chatId={}", text, chatId);
 
     TradeCommandDto cmd = parserService.parse(text, chatId);
     String response = commandDispatcher.dispatch(cmd);

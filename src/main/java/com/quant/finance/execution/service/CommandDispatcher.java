@@ -80,7 +80,7 @@ public class CommandDispatcher {
         }
       };
     } catch (Exception e) {
-      log.error("Error dispatching command: {}", cmd, e);
+      log.error("Error dispatching command={}", cmd, e);
       return "❌ Error while executing command: " + e.getMessage();
     }
   }

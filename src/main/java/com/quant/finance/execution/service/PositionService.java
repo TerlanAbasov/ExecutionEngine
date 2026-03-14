@@ -36,7 +36,7 @@ public class PositionService {
   private IBClient ibClient;
 
   private final Map<String, ContractData> positionMap = new ConcurrentHashMap<>();
-  private CompletableFuture<Map<String, ContractData>> positionsFuture;
+  private volatile CompletableFuture<Map<String, ContractData>> positionsFuture;
   private final Map<Integer, ContractData> pnlMap = new ConcurrentHashMap<>();
   private final Set<Integer> pendingPnl = ConcurrentHashMap.newKeySet();
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -54,8 +54,8 @@ public class PositionService {
   public void onPosition(String account, Contract contract, Decimal quantity,
                          double avgCost) {
     try {
-      log.info("POSITION. Account: {}, symbol: {}, conid: {}, secType: {}, currency: {}," +
-              " position: {} , avgCost: {}",
+      log.info("POSITION. Account={}, symbol={}, conid={}, secType={}, currency={}," +
+              " position={} , avgCost={}",
           account, contract.symbol(), contract.conid(), contract.secType().name(),
           contract.currency(), quantity.toString(), DoubleMaxString(avgCost));
 
@@ -87,7 +87,9 @@ public class PositionService {
         positionsFuture.complete(snapshot);
       }
 
-      requestPnLForPositions(snapshot);
+      snapshot.forEach((symbol, contractData) -> {
+        requestPnLForPositions(contractData);
+      });
 
       positionMap.clear();
       scheduler.schedule(this::checkSinglePnlCompletion, 5, TimeUnit.SECONDS);
@@ -97,19 +99,16 @@ public class PositionService {
     }
   }
 
-  private void requestPnLForPositions(Map<String, ContractData> snapshot) {
-    snapshot.forEach((symbol, contractData) -> {
+  private void requestPnLForPositions(ContractData contractData) {
+    int requestId = EngineUtil.nextRequestId();
+    pnlMap.put(requestId, contractData);
+    pendingPnl.add(requestId);
 
-      int requestId = EngineUtil.nextRequestId();
-      pnlMap.put(requestId, contractData);
-      pendingPnl.add(requestId);
-
-      ibClient.requestSinglePnl(
-          requestId,
-          properties.getAccount().getId(),
-          "",
-          contractData.getContractId());
-    });
+    ibClient.requestSinglePnl(
+        requestId,
+        properties.getAccount().getId(),
+        "",
+        contractData.getContractId());
   }
 
   public void pnlSingle(int requestId, Decimal positions, double dailyPnL,
@@ -118,16 +117,15 @@ public class PositionService {
     ContractData contractData = pnlMap.get(requestId);
 
     if (contractData == null) {
-      log.warn("Contract not found for requestId: {}", requestId);
-      log.info("pnlSingle. requestId: {}, positions: {}, dailyPnL: {}," +
-              " unrealizedPnl: {}, realizedPnl: {}, value: {}",
+      log.warn("Contract not found for requestId={}", requestId);
+      log.info("pnlSingle. requestId={}, positions={}, dailyPnL={}," +
+              " unrealizedPnl={}, realizedPnl={}, value={}",
           requestId, positions, DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
           DoubleMaxString(realizedPnl), value);
-      return;
     } else {
 
-      log.info("pnlSingle. symbol: {}, conId: {}. requestId: {}, positions: {}, dailyPnL: {}," +
-              " unrealizedPnl: {}, realizedPnl: {}, value: {}",
+      log.info("pnlSingle. symbol={}, conId={}. requestId={}, positions={}, dailyPnL={}," +
+              " unrealizedPnl={}, realizedPnl={}, value={}",
           contractData.getSymbol(), contractData.getContractId(), requestId, positions,
           DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
           DoubleMaxString(realizedPnl), value);
@@ -137,10 +135,10 @@ public class PositionService {
       contractData.setUnrealizedPnl(DoubleMaxString(unrealizedPnl));
       contractData.setRealizedPnl(DoubleMaxString(realizedPnl));
       contractData.setValue(value);
-
-      pendingPnl.remove(requestId);
     }
 
+
+    pendingPnl.remove(requestId);
     ibClient.getEClientSocket().cancelPnLSingle(requestId);
   }
 
@@ -163,7 +161,7 @@ public class PositionService {
   }
 
   public void pnl(int requestId, double dailyPnL, double unrealizedPnl, double realizedPnl) {
-    String message = String.format("PnL. dailyPnL: %f, unrealizedPnl: %f, realizedPnl: %f",
+    String message = String.format("PnL. dailyPnL=%f, unrealizedPnl=%f, realizedPnl=%f",
         dailyPnL, unrealizedPnl, realizedPnl);
     log.info(message);
     notificationService.notify(message);

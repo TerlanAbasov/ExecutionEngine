@@ -17,4 +17,6 @@ public class ContractData {
   private String unrealizedPnl;
   private String realizedPnl;
   private Double value;
+
+  //todo consider should equals and hashcode be overriten.
 }

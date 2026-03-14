@@ -24,7 +24,7 @@ public class ExecutionService {
   private final OrderRepository orderRepository;
 
   public void execDetails(int id, Contract contract, Execution execution) {
-    log.info("EXECUTION DETAILS. OrderId: {}, Price: {}, Shares: {}", execution.orderId(),
+    log.info("EXECUTION DETAILS. OrderId={}, Price={}, Shares={}", execution.orderId(),
         execution.price(), execution.shares());
 
     OrderEntity order =
@@ -54,8 +54,8 @@ public class ExecutionService {
   }
 
   public void commissionAndFeesReport(CommissionAndFeesReport report) {
-    log.info("COMMISSION AND FEES REPORT DETAILS. ExecutionId: {}, commissionAndFees: {}," +
-            " currency: {}, realizedPNL: {}, yield: {}, yieldRedemptionDate: {}",
+    log.info("COMMISSION AND FEES REPORT DETAILS. ExecutionId={}, commissionAndFees={}," +
+            " currency={}, realizedPNL={}, yield={}, yieldRedemptionDate={}",
         report.execId(),
         DoubleMaxString(report.commissionAndFees()),
         report.currency(),
@@ -63,7 +63,7 @@ public class ExecutionService {
         DoubleMaxString(report.yield()),
         report.yieldRedemptionDate());
 
-    notificationService.notify(String.format("ExecutionId: %s, realizedPNL: %s", report.execId(),
+    notificationService.notify(String.format("ExecutionId=%s, realizedPNL=%s", report.execId(),
         DoubleMaxString(report.realizedPNL())));
 
     ExecutionEntity executionEntity =

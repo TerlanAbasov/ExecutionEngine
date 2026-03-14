@@ -21,7 +21,7 @@ public class AlertRoutingService {
         log.info("Alert routed successfully.");
       }
     } catch (Exception e) {
-      log.error("Could route alert to partner. error message: {}", e.getMessage());
+      log.error("Could route alert to partner. error message={}", e.getMessage());
     }
   }
 }

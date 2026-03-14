@@ -137,8 +137,8 @@ public class IBClient {
     String message = "";
     try {
       message = String.format(
-          "Placing order. Id: %d, parentId: %d, symbol: %s, action: %s, orderType: %s," +
-              " quantity: %d, limitPrice: %s, auxPrice: %s, tif: %s, transmit: %b",
+          "Placing order. Id=%d, parentId=%d, symbol=%s, action=%s, orderType=%s," +
+              " quantity=%d, limitPrice=%s, auxPrice=%s, tif=%s, transmit=%b",
           order.orderId(), order.parentId(), contract.symbol(), order.action().name(),
           order.getOrderType(), order.totalQuantity().longValue(),
           Util.DoubleMaxString(order.lmtPrice()), Util.DoubleMaxString(order.auxPrice()),
@@ -171,7 +171,7 @@ public class IBClient {
   }
 
   public void cancelOrder(int orderId, OrderCancel orderCancel) {
-    log.info("Cancel order with orderId: {}", orderId);
+    log.info("Cancel order with orderId={}", orderId);
     eClientSocket.cancelOrder(orderId, orderCancel);
   }
 
@@ -179,12 +179,12 @@ public class IBClient {
     int requestId = EngineUtil.nextRequestId();
     String accountId = properties.getAccount().getId();
 
-    log.info("Requesting pnl. requestId: {}", requestId);
+    log.info("Requesting pnl. requestId={}", requestId);
     eClientSocket.reqPnL(requestId, accountId, "");
   }
 
   public void requestSinglePnl(int requestId, String accountId, String modelCode, int conId) {
-    log.info("Requesting single PNL. requestId: {}, accountId: {}, modelCode: {},conId: {}",
+    log.info("Requesting single PNL. requestId={}, accountId={}, modelCode={},conId={}",
         requestId, accountId, modelCode, conId);
     eClientSocket.reqPnLSingle(requestId, accountId, modelCode, conId);
   }
@@ -193,7 +193,7 @@ public class IBClient {
     int requestId = EngineUtil.nextRequestId();
     String accountId = properties.getAccount().getId();
 
-    log.info("Requesting single PNL. requestId: {}, accountId: {}, conId: {}", requestId, accountId,
+    log.info("Requesting single PNL. requestId={}, accountId={}, conId={}", requestId, accountId,
         conId);
 
     eClientSocket.reqPnLSingle(requestId, accountId, "", conId);

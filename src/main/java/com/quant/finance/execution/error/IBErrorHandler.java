@@ -25,7 +25,7 @@ public class IBErrorHandler {
   private static boolean isConnectionOk = false;
 
   public void handleError(int orderId, long l, int code, String message, String s1) {
-    String errorText = String.format("orderId: %d, code: %d, message: %s", orderId, code, message);
+    String errorText = String.format("orderId=%d, code=%d, message=%s", orderId, code, message);
 
     if (List.of(2104, 2158, 2106).contains(code)) {
       if (!isConnectionOk) {
@@ -58,7 +58,7 @@ public class IBErrorHandler {
       optionalOrder.get().setErrorMessage(errorText);
       orderService.save(optionalOrder.get());
     } else {
-      log.error("Order not fount with id: {}", orderId);
+      log.error("Order not fount with id={}", orderId);
     }
   }
 }

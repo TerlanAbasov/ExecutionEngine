@@ -30,28 +30,22 @@ public class StrategyService {
 
     StrategyEntity strategy = optionalStrategy.get();
 
-    Map<String, ContractData> positions;
+    double existingQuantity;
+
     try {
-      positions = positionService.requestPositions().get();
+      Map<String, ContractData> positions = positionService.requestPositions().get();
+      ContractData existingPosition = positions.get(alert.getSymbol());
+      existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
+
+      log.info("Position validation. alertSymbol={}, existingPosition={}, allSymbols={}",
+          alert.getSymbol(), existingPosition, positions.keySet());
     } catch (Exception e) {
       log.error("Failed to request positions", e);
       notificationService.notify("Failed to request positions: " + e.getMessage());
       return;
     }
 
-    ContractData existingPosition = positions.get(alert.getSymbol());
-    double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
-
-    log.info("Sell validation. alertSymbol={}, existingPosition={}, allSymbols={}",
-        alert.getSymbol(), existingPosition, positions.keySet());
-
-    if (Action.BUY.equals(alert.getAction()) && existingQuantity > 0) {
-      logAndNotify("Can't buy existing symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
-          alert);
-      return;
-    } else if (Action.SELL.equals(alert.getAction()) && existingQuantity <= 0) {
-      logAndNotify("Can't sell non existing symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
-          alert);
+    if (!checkIfQuantityExecutable(alert, existingQuantity)) {
       return;
     }
 
@@ -66,11 +60,24 @@ public class StrategyService {
         });
   }
 
-  private void logAndNotify(String template, AlertEntity alert) {
+  private boolean checkIfQuantityExecutable(AlertEntity alert, double existingQuantity) {
+    if (Action.BUY.equals(alert.getAction()) && existingQuantity > 0) {
+      logInfoAndNotify("Can't buy existing symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
+          alert);
+      return false;
+    } else if (Action.SELL.equals(alert.getAction()) && existingQuantity <= 0) {
+      logInfoAndNotify("Can't sell non existing symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
+          alert);
+      return false;
+    }
+    return true;
+  }
+
+  private void logInfoAndNotify(String template, AlertEntity alert) {
     String message =
         String.format(template, alert.getSymbol(), alert.getPeerSymbol(), alert.getAction(),
             alert.isPeer());
-    log.error(message);
+    log.info(message);
     notificationService.notify(message);
   }
 

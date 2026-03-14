@@ -20,8 +20,8 @@ public class NotificationService {
   private final ApplicationProperties properties;
 
   public void notify(TVAlertDto alert) {
-    if (properties.getClient().getTelegram().isEnabled()) {
-      try {
+    try {
+      if (properties.getClient().getTelegram().isEnabled()) {
         String message = convertToJson(alert);
         logMessage(message);
 
@@ -31,26 +31,28 @@ public class NotificationService {
             .parseMode("Markdown")
             .build();
         telegramClient.execute(msg);
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
+
       }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
     }
   }
 
   public void notify(String message) {
-    if (properties.getClient().getTelegram().isEnabled()) {
-      logMessage(message);
+    try {
+      if (properties.getClient().getTelegram().isEnabled()) {
+        logMessage(message);
 
-      SendMessage msg = SendMessage.builder()
-          .chatId(properties.getClient().getTelegram().getChatId())
-          .text(message)
-          .parseMode("Markdown")
-          .build();
-      try {
+        SendMessage msg = SendMessage.builder()
+            .chatId(properties.getClient().getTelegram().getChatId())
+            .text(message)
+            .parseMode("Markdown")
+            .build();
         telegramClient.execute(msg);
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
+
       }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
     }
   }
 
@@ -60,7 +62,7 @@ public class NotificationService {
   }
 
   private void logMessage(String message) {
-    log.debug("Sending notification: {}", message);
+    log.debug("Sending notification={}", message);
   }
 
   @PreDestroy

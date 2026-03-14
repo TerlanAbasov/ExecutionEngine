@@ -47,6 +47,7 @@ public class EWrapperImpl implements EWrapper {
   private final NotificationService notificationService;
   private final ApplicationProperties properties;
   private final PositionService positionService;
+  private final PnlService pnlService;
   private final ContractService contractService;
   private final OrderService orderService;
   private final ExecutionService executionService;
@@ -89,7 +90,7 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void openOrder(int i, Contract contract, Order order, OrderState orderState) {
-    log.info("OPEN ORDER. orderId: {}, status: {}", order.orderId(), orderState.status());
+    log.info("OPEN ORDER. orderId={}, status={}", order.orderId(), orderState.status());
   }
 
   @Override
@@ -124,7 +125,7 @@ public class EWrapperImpl implements EWrapper {
   @Override
   public void nextValidId(int id) {
     IBClient.setNextOrderId(id);
-    log.info("\uD83D\uDE80 Next valid orderId: {}", id);
+    log.info("\uD83D\uDE80 Next valid orderId={}", id);
   }
 
   @Override
@@ -138,9 +139,8 @@ public class EWrapperImpl implements EWrapper {
   }
 
   @Override
-  public void contractDetailsEnd(int i) {
-    log.info("CONTRTACT DETAILS END. id: {}", i);
-
+  public void contractDetailsEnd(int requestId) {
+    contractService.onContractDetailsEnd(requestId);
   }
 
   @Override
@@ -425,13 +425,13 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void pnl(int requestId, double dailyPnL, double unrealizedPnl, double realizedPnl) {
-    positionService.pnl(requestId, dailyPnL, unrealizedPnl, realizedPnl);
+    pnlService.pnl(requestId, dailyPnL, unrealizedPnl, realizedPnl);
   }
 
   @Override
   public void pnlSingle(int requestId, Decimal pos, double dailyPnL, double unrealizedPnl,
                         double realizedPnl, double value) {
-    positionService.pnlSingle(requestId, pos, dailyPnL, unrealizedPnl, realizedPnl, value);
+    pnlService.pnlSingle(requestId, pos, dailyPnL, unrealizedPnl, realizedPnl, value);
   }
 
   @Override

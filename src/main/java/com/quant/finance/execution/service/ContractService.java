@@ -48,7 +48,7 @@ public class ContractService {
 
   public void onContractDetails(int requestId, ContractDetails contractDetails) {
     try {
-      log.info("CONTRTACT DETAILS. RequestId: {},ContractDetails: {}", requestId,
+      log.info("CONTRTACT DETAILS. RequestId={}, ContractDetails={}", requestId,
           contractDetails.toString());
 
       CompletableFuture<ContractDetails> future = contractMap.get(requestId);
@@ -63,6 +63,7 @@ public class ContractService {
   }
 
   public void onContractDetailsEnd(int requestId) {
+    log.info("CONTRTACT DETAILS END. id={}", requestId);
     contractMap.remove(requestId);
   }
 

@@ -22,8 +22,8 @@ public class AccountService {
         return;
       }
 
-      String message = String.format("UpdateAccountValue. key: %s, value: %s, vurrency: %s," +
-          " accountName: %s", key, value, currency, accountName);
+      String message = String.format("UpdateAccountValue. key=%s, value=%s, vurrency=%s," +
+          " accountName=%s", key, value, currency, accountName);
       log.info(message);
       notificationService.notify(message);
     } catch (Exception e) {
@@ -35,9 +35,9 @@ public class AccountService {
                               double marketValue, double averageCost, double unrealizedPNL,
                               double realizedPNL, String accountName) {
     try {
-      String message = String.format("UpdatePortfolio. symbol: %s, secType: %s, exchange: %s," +
-              " position: %s, marketPrice: %s, marketValue: %s, averageCost: %s, unrealizedPNL: %s," +
-              " realizedPNL: %s, accountName: %s",
+      String message = String.format("UpdatePortfolio. symbol=%s, secType=%s, exchange=%s," +
+              " position=%s, marketPrice=%s, marketValue=%s, averageCost=%s, unrealizedPNL=%s," +
+              " realizedPNL=%s, accountName=%s",
           contract.symbol(), contract.secType().name(), contract.exchange(),
           decimalToStringNoZero(position), DoubleMaxString(marketPrice),
           DoubleMaxString(marketValue), DoubleMaxString(averageCost),
@@ -51,7 +51,7 @@ public class AccountService {
 
   public void updateAccountTime(String timestamp) {
     try {
-      String message = String.format("UpdateAccountTime. time: %s", timestamp);
+      String message = String.format("UpdateAccountTime. time=%s", timestamp);
       log.info(message);
       notificationService.notify(message);
     } catch (Exception e) {
@@ -61,7 +61,7 @@ public class AccountService {
 
   public void accountDownloadEnd(String account) {
     try {
-      String message = String.format("Download finished for account: %s", account);
+      String message = String.format("Download finished for account=%s", account);
       log.info(message);
       notificationService.notify(message);
     } catch (Exception e) {
