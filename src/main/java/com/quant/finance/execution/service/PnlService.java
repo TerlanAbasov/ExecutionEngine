@@ -28,6 +28,19 @@ public class PnlService {
   private final Map<Integer, ContractData> pnlMap = new ConcurrentHashMap<>();
   private final Set<Integer> pendingPnl = ConcurrentHashMap.newKeySet();
 
+  public void clearCollections() {
+    pnlMap.clear();
+    pendingPnl.clear();
+  }
+
+  public void requestPnLForSinglePosition(ContractData contractData) {
+    int requestId = EngineUtil.nextRequestId();
+    pendingPnl.add(requestId);
+    pnlMap.put(requestId, contractData);
+    ibClient.requestSinglePnl(
+        requestId, properties.getAccount().getId(), "", contractData.getContractId());
+  }
+
   public void pnlSingle(int requestId, Decimal positions, double dailyPnL,
                         double unrealizedPnl,
                         double realizedPnl, double value) {
@@ -54,38 +67,6 @@ public class PnlService {
       contractData.setValue(value);
     }
 
-
-    pendingPnl.remove(requestId);
-    ibClient.getEClientSocket().cancelPnLSingle(requestId);
-  }
-
-  public void pnlSingle11(int requestId, Decimal positions, double dailyPnL,
-                          double unrealizedPnl,
-                          double realizedPnl, double value) {
-    ContractData contractData = pnlMap.get(requestId);
-
-    if (contractData == null) {
-      log.warn("Contract not found for requestId={}", requestId);
-      log.info("pnlSingle. requestId={}, positions={}, dailyPnL={}," +
-              " unrealizedPnl={}, realizedPnl={}, value={}",
-          requestId, positions, DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
-          DoubleMaxString(realizedPnl), value);
-    } else {
-
-      log.info("pnlSingle. symbol={}, conId={}. requestId={}, positions={}, dailyPnL={}," +
-              " unrealizedPnl={}, realizedPnl={}, value={}",
-          contractData.getSymbol(), contractData.getContractId(), requestId, positions,
-          DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
-          DoubleMaxString(realizedPnl), value);
-
-      contractData.setQuantity(positions.value().doubleValue());
-      contractData.setDailyPnL(DoubleMaxString(dailyPnL));
-      contractData.setUnrealizedPnl(DoubleMaxString(unrealizedPnl));
-      contractData.setRealizedPnl(DoubleMaxString(realizedPnl));
-      contractData.setValue(value);
-    }
-
-
     pendingPnl.remove(requestId);
     ibClient.getEClientSocket().cancelPnLSingle(requestId);
   }
@@ -97,46 +78,24 @@ public class PnlService {
     notificationService.notify(message);
   }
 
-  public void requestPnLForPositions(ContractData contractData) {
-    int requestId = EngineUtil.nextRequestId();
-    pendingPnl.add(requestId);
-    ibClient.requestSinglePnl(
-        requestId, properties.getAccount().getId(), "", contractData.getContractId());
-  }
+  public boolean checkSinglePnlCompletion() {
+    boolean isCompleted = pendingPnl.isEmpty();
 
-  public void checkSinglePnlCompletion() {
     try {
       String message =
           objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
 
-      if (pendingPnl.isEmpty()) {
+      if (isCompleted) {
         notificationService.notify("Positions: " + message);
       } else {
-        notificationService.notify("Partial snapshot received. Positions: " + message);
+        notificationService.notify("Partial snapshot received.\n Positions: " + message);
       }
     } catch (JsonProcessingException e) {
       log.error("Failed to serialize positions", e);
       notificationService.notify(e.getMessage());
-    } finally {
-      pnlMap.clear();
     }
+
+    return isCompleted;
   }
 
-  public void checkSinglePnlCompletion11() {
-    try {
-      String message =
-          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
-
-      if (pendingPnl.isEmpty()) {
-        notificationService.notify("Positions: " + message);
-      } else {
-        notificationService.notify("Partial snapshot received. Positions: " + message);
-      }
-    } catch (JsonProcessingException e) {
-      log.error("Failed to serialize positions", e);
-      notificationService.notify(e.getMessage());
-    } finally {
-      pnlMap.clear();
-    }
-  }
 }

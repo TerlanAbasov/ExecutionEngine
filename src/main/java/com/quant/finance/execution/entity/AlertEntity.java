@@ -68,7 +68,7 @@ public class AlertEntity {
   @Column(nullable = false, length = 2000)
   private String json;
   @Enumerated(STRING)
-  @Column(nullable = false, length = 20)
+  @Column(nullable = false, length = 20, columnDefinition = "RECEIVED")
   private AlertState state;
   @Column(length = 2000)
   private String description;

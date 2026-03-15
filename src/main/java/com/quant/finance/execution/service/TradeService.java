@@ -11,6 +11,7 @@ import com.quant.finance.execution.dto.TradeCommandDto;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
+import com.quant.finance.execution.enums.AlertState;
 import com.quant.finance.execution.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class TradeService {
   private final OrderService orderService;
   private final NotificationService notificationService;
   private final EWrapperImpl eWrapper;
+  private final AlertService alertService;
   @Lazy
   @Autowired
   private IBClient ibClient;
@@ -43,9 +45,12 @@ public class TradeService {
       if (parentOrder.action() == Action.BUY) {
         pleaceBacketOrders(contractDetails, parentOrderEntity, parentOrder);
       }
+
+      alertService.updateState(alert, AlertState.TRADED);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       notificationService.notify(String.format("TradeService.trade(). %s", e.getMessage()));
+      alertService.updateStateAndDescription(alert, AlertState.TRADED, e.getMessage());
     }
   }
 

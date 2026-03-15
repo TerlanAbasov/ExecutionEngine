@@ -8,13 +8,11 @@ import com.ib.client.Decimal;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.model.ContractData;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +32,8 @@ public class PositionServiceNew {
   @Autowired
   private IBClient ibClient;
 
-  private static final Map<String, ContractData> positionMap = new ConcurrentHashMap<>();
-  private static final Map<String, CompletableFuture<ContractData>> positionFutureMap =
+  private final Map<String, ContractData> positionMap = new ConcurrentHashMap<>();
+  private final Map<String, CompletableFuture<ContractData>> positionFutureMap =
       new ConcurrentHashMap<>();
 
   //private volatile CompletableFuture<Map<String, ContractData>> positionsFuture;
@@ -47,8 +45,8 @@ public class PositionServiceNew {
    * @param symbol
    * @return
    */
-  public CompletableFuture<ContractData> requestPositions(String symbol) {
-    synchronized (positionFutureMap) {
+  public CompletableFuture<ContractData> getSymbolPosition(String symbol) {
+    synchronized (this) {
       positionFutureMap.putIfAbsent(symbol, new CompletableFuture<>());
     }
     ibClient.requestPositions();
@@ -60,8 +58,9 @@ public class PositionServiceNew {
    * called by api or webhook to get update and notification about positions
    */
   public void requestPositions() {
-    synchronized (positionMap) {
+    synchronized (this) {
       positionMap.clear();
+      pnlService.clearCollections();
     }
     ibClient.requestPositions();
   }
@@ -77,15 +76,17 @@ public class PositionServiceNew {
 
       ContractData contractData = buildContractData(contract, quantity, avgCost);
 
-      CompletableFuture<ContractData> future = positionFutureMap.remove(contract.symbol());
-      if (future != null && !future.isDone()) {
-        future.complete(contractData);
-      }
+      synchronized (this) {
+        CompletableFuture<ContractData> future = positionFutureMap.get(contract.symbol());
+        if (future != null && !future.isDone()) {
+          future.complete(contractData);
+          positionFutureMap.remove(contract.symbol());
+        }
 
-      if (contractData.getQuantity() != 0) {
-        positionMap.put(contractData.getSymbol(), contractData);
-        pnlService.requestPnLForPositions(contractData);
-        //todo find out when to remove contractData from the map
+        if (contractData.getQuantity() != 0) {
+          positionMap.put(contractData.getSymbol(), contractData);
+          pnlService.requestPnLForSinglePosition(contractData);
+        }
       }
 
     } catch (Exception e) {
@@ -110,18 +111,29 @@ public class PositionServiceNew {
   public void onPositionEnd() {
     log.info("POSITION END");
 
-
-  }
-
-  public void onPositionEnd11() {
     try {
-      positionMap.clear();
-      scheduler.schedule(pnlService::checkSinglePnlCompletion, 5, TimeUnit.SECONDS);
+      synchronized (this) {
+        positionFutureMap.forEach((contractSymbol, positionFuture) -> {
+          try {
+            ContractData contractData = positionFuture.get();
+            if (!positionFuture.isDone()) {
+              positionFuture.complete(contractData);
+            }
+          } catch (Exception e) {
+            log.error(e.getMessage(), e);
+          }
+        });
+
+        for (int i = 0; i < 10; i++) {
+          Thread.sleep(1000);
+          if (pnlService.checkSinglePnlCompletion()) {
+            break;
+          }
+        }
+      }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
-      notificationService.notify(e.getMessage());
     }
+
   }
-
-
 }

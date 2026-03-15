@@ -1,5 +1,7 @@
 package com.quant.finance.execution.schedule;
 
+import static org.springframework.data.domain.PageRequest.of;
+
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.enums.AlertState;
 import com.quant.finance.execution.repository.AlertRepository;
@@ -19,7 +21,7 @@ public class AlertProcessScheduler {
 
   @Scheduled(fixedDelayString = "${application.params.alertProcessorFixedDelay}")
   public void processAlerts() {
-    List<AlertEntity> alerts = alertRepository.findNext(10);
+    List<AlertEntity> alerts = alertRepository.findNextAlerts(of(0, 10));
 
     for (AlertEntity alert : alerts) {
       try {

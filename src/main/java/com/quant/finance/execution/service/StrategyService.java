@@ -5,8 +5,8 @@ import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.model.ContractData;
 import com.quant.finance.execution.repository.StrategyRepository;
-import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 public class StrategyService {
   private final StrategyRepository repository;
   private final NotificationService notificationService;
-  private final PositionService positionService;
+  private final PositionServiceNew positionService;
   private final AlertService alertService;
   private final ContractService contractService;
   private final TradeService tradeService;
@@ -33,12 +33,23 @@ public class StrategyService {
     double existingQuantity;
 
     try {
-      Map<String, ContractData> positions = positionService.requestPositions().get();
-      ContractData existingPosition = positions.get(alert.getSymbol());
+      CompletableFuture<ContractData> future = positionService.getSymbolPosition(alert.getSymbol());
+      if (future == null || !future.isDone()) {
+        String message =
+            String.format("CompletableFuture is null or future is not completed. symbol=%s",
+                alert.getSymbol());
+
+        log.error(message);
+        notificationService.notify(message);
+        return;
+      }
+
+      ContractData existingPosition = future.get();
+
       existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
 
-      log.info("Position validation. alertSymbol={}, existingPosition={}, allSymbols={}",
-          alert.getSymbol(), existingPosition, positions.keySet());
+      log.info("Position validation. alertSymbol={}, existingPosition={}",
+          alert.getSymbol(), existingPosition);
     } catch (Exception e) {
       log.error("Failed to request positions", e);
       notificationService.notify("Failed to request positions: " + e.getMessage());

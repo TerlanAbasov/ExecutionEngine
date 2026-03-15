@@ -44,8 +44,8 @@ public class AlertService {
 
     try {
       log.info("Received alert: {}", tvAlertDto);
-      notificationService.notify(tvAlertDto);
       routingService.routeToPartner(tvAlertDto);
+      notificationService.notify(tvAlertDto);
       alert = repository.save(alert);
       //processAlert(alert);
     } catch (Exception e) {
