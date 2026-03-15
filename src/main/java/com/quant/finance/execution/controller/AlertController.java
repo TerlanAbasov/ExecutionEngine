@@ -17,6 +17,6 @@ public class AlertController {
 
   @PostMapping("/tv-hook")
   public void alert(@RequestBody TVAlertDto tvAlertDto) {
-    alertService.processAlert(tvAlertDto);
+    alertService.receiveAlert(tvAlertDto);
   }
 }

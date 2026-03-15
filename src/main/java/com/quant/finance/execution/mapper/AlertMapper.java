@@ -40,6 +40,8 @@ public interface AlertMapper {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "isPeer", ignore = true)
+  @Mapping(target = "state", defaultValue = "RECEIVED")
+  @Mapping(target = "description", ignore = true)
   AlertEntity toEntity(TVAlertDto tvAlertDto);
 
   @Named("determineAction")

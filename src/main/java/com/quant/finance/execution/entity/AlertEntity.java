@@ -3,6 +3,7 @@ package com.quant.finance.execution.entity;
 import static jakarta.persistence.EnumType.STRING;
 
 import com.ib.client.Types.Action;
+import com.quant.finance.execution.enums.AlertState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -66,6 +67,11 @@ public class AlertEntity {
   private LocalDateTime updatedAt;
   @Column(nullable = false, length = 2000)
   private String json;
+  @Enumerated(STRING)
+  @Column(nullable = false, length = 20)
+  private AlertState state;
+  @Column(length = 2000)
+  private String description;
 
   public AlertEntity duplicateForPeerTickerProcessing() {
     return AlertEntity.builder()
@@ -87,6 +93,8 @@ public class AlertEntity {
         .createdAt(this.createdAt)
         .updatedAt(this.updatedAt)
         .json(this.json)
+        .state(this.state)
+        .description(this.description)
         .build();
   }
 }

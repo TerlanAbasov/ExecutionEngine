@@ -77,15 +77,14 @@ public class PositionServiceNew {
 
       ContractData contractData = buildContractData(contract, quantity, avgCost);
 
-      CompletableFuture<ContractData> future = positionFutureMap.get(contract.symbol());
+      CompletableFuture<ContractData> future = positionFutureMap.remove(contract.symbol());
       if (future != null && !future.isDone()) {
         future.complete(contractData);
       }
-      //todo consider if buy and sell come for a symbol at the same time. futures will be overlapped
-      //todo find out when to remove completed future from the map
 
       if (contractData.getQuantity() != 0) {
         positionMap.put(contractData.getSymbol(), contractData);
+        pnlService.requestPnLForPositions(contractData);
         //todo find out when to remove contractData from the map
       }
 
@@ -115,19 +114,7 @@ public class PositionServiceNew {
   }
 
   public void onPositionEnd11() {
-    log.info("POSITION END");
-
     try {
-      Map<String, ContractData> snapshot = new HashMap<>(positionMap);
-
-      if (this.positionsFuture != null) {
-        positionsFuture.complete(snapshot);
-      }
-
-      snapshot.forEach((symbol, contractData) -> {
-        pnlService.requestPnLForPositions(contractData);
-      });
-
       positionMap.clear();
       scheduler.schedule(pnlService::checkSinglePnlCompletion, 5, TimeUnit.SECONDS);
     } catch (Exception e) {

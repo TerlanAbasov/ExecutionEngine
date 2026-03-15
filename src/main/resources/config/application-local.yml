@@ -45,6 +45,7 @@ application:
     params:
         pairTickerThreadSleep: 2000
         contractFutureTimeout: 60
+        alertProcessorFixedDelay: "1000"
 
 management:
     endpoints:

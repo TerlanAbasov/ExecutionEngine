@@ -75,3 +75,11 @@ databaseChangeLog:
                                     type: VARCHAR(2000)
                                     constraints:
                                         nullable: false
+                            -   column:
+                                    name: state
+                                    type: VARCHAR(20)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: description
+                                    type: VARCHAR(2000)

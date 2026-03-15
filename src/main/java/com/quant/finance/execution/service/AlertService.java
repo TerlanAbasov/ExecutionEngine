@@ -4,6 +4,7 @@ import com.ib.client.Types;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.dto.TVAlertDto;
 import com.quant.finance.execution.entity.AlertEntity;
+import com.quant.finance.execution.enums.AlertState;
 import com.quant.finance.execution.mapper.AlertMapper;
 import com.quant.finance.execution.repository.AlertRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -37,18 +38,33 @@ public class AlertService {
   }
 
   @Async
-  public void processAlert(TVAlertDto tvAlertDto) {
-    log.info("Processing alert {}", tvAlertDto);
-    notificationService.notify(tvAlertDto);
-    routingService.routeToPartner(tvAlertDto);
+  @Transactional
+  public void receiveAlert(TVAlertDto tvAlertDto) {
+    AlertEntity alert = alertMapper.toEntity(tvAlertDto);
 
-    AlertEntity alert = repository.save(alertMapper.toEntity(tvAlertDto));
+    try {
+      log.info("Received alert: {}", tvAlertDto);
+      notificationService.notify(tvAlertDto);
+      routingService.routeToPartner(tvAlertDto);
+      alert = repository.save(alert);
+      //processAlert(alert);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
+    }
+  }
+
+  @Transactional
+  public void processAlert(AlertEntity alert) {
+    log.info("Processing alert: {}", alert);
+    updateState(alert, AlertState.PROCESSING);
 
     if (alert.getPeerSymbol() == null || alert.getPeerSymbol().isBlank()) {
       try {
         strategyService.executeStrategy(alert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+        updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
         notificationService.notify(
             "Error while alert processing: " + e.getMessage());
       }
@@ -64,6 +80,7 @@ public class AlertService {
         strategyService.executeStrategy(alert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+        updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
         notificationService.notify(
             "Error while alert processing: " + e.getMessage());
       }
@@ -75,6 +92,7 @@ public class AlertService {
         strategyService.executeStrategy(peerAlert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+        updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
         notificationService.notify(
             "Error while alert processing: " + e.getMessage());
       }
@@ -85,5 +103,19 @@ public class AlertService {
   @Transactional
   public AlertEntity save(TVAlertDto tvAlertDto) {
     return repository.save(alertMapper.toEntity(tvAlertDto));
+  }
+
+  @Transactional
+  public AlertEntity updateState(AlertEntity alert, AlertState alertState) {
+    alert.setState(alertState);
+    return repository.save(alert);
+  }
+
+  @Transactional
+  public AlertEntity updateStateAndDescription(AlertEntity alert, AlertState alertState,
+                                               String description) {
+    alert.setState(alertState);
+    alert.setDescription(description);
+    return repository.save(alert);
   }
 }

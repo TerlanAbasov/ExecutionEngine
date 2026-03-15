@@ -59,6 +59,37 @@ public class PnlService {
     ibClient.getEClientSocket().cancelPnLSingle(requestId);
   }
 
+  public void pnlSingle11(int requestId, Decimal positions, double dailyPnL,
+                          double unrealizedPnl,
+                          double realizedPnl, double value) {
+    ContractData contractData = pnlMap.get(requestId);
+
+    if (contractData == null) {
+      log.warn("Contract not found for requestId={}", requestId);
+      log.info("pnlSingle. requestId={}, positions={}, dailyPnL={}," +
+              " unrealizedPnl={}, realizedPnl={}, value={}",
+          requestId, positions, DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
+          DoubleMaxString(realizedPnl), value);
+    } else {
+
+      log.info("pnlSingle. symbol={}, conId={}. requestId={}, positions={}, dailyPnL={}," +
+              " unrealizedPnl={}, realizedPnl={}, value={}",
+          contractData.getSymbol(), contractData.getContractId(), requestId, positions,
+          DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
+          DoubleMaxString(realizedPnl), value);
+
+      contractData.setQuantity(positions.value().doubleValue());
+      contractData.setDailyPnL(DoubleMaxString(dailyPnL));
+      contractData.setUnrealizedPnl(DoubleMaxString(unrealizedPnl));
+      contractData.setRealizedPnl(DoubleMaxString(realizedPnl));
+      contractData.setValue(value);
+    }
+
+
+    pendingPnl.remove(requestId);
+    ibClient.getEClientSocket().cancelPnLSingle(requestId);
+  }
+
   public void pnl(int requestId, double dailyPnL, double unrealizedPnl, double realizedPnl) {
     String message = String.format("PnL. dailyPnL=%f, unrealizedPnl=%f, realizedPnl=%f",
         dailyPnL, unrealizedPnl, realizedPnl);
@@ -68,17 +99,30 @@ public class PnlService {
 
   public void requestPnLForPositions(ContractData contractData) {
     int requestId = EngineUtil.nextRequestId();
-    pnlMap.put(requestId, contractData);
     pendingPnl.add(requestId);
-
     ibClient.requestSinglePnl(
-        requestId,
-        properties.getAccount().getId(),
-        "",
-        contractData.getContractId());
+        requestId, properties.getAccount().getId(), "", contractData.getContractId());
   }
 
   public void checkSinglePnlCompletion() {
+    try {
+      String message =
+          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
+
+      if (pendingPnl.isEmpty()) {
+        notificationService.notify("Positions: " + message);
+      } else {
+        notificationService.notify("Partial snapshot received. Positions: " + message);
+      }
+    } catch (JsonProcessingException e) {
+      log.error("Failed to serialize positions", e);
+      notificationService.notify(e.getMessage());
+    } finally {
+      pnlMap.clear();
+    }
+  }
+
+  public void checkSinglePnlCompletion11() {
     try {
       String message =
           objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());

@@ -52,3 +52,10 @@ databaseChangeLog:
                             -   column:
                                     name: created_at
                                     descending: true
+
+                -   createIndex:
+                        indexName: idx_alert_state
+                        tableName: alert
+                        columns:
+                            -   column:
+                                    name: state
