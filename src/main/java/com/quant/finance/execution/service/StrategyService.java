@@ -3,10 +3,10 @@ package com.quant.finance.execution.service;
 import com.ib.client.Types.Action;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
-import com.quant.finance.execution.model.ContractData;
 import com.quant.finance.execution.repository.StrategyRepository;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,52 +23,52 @@ public class StrategyService {
   private final TradeService tradeService;
 
   public void executeStrategy(AlertEntity alert) {
-    Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
-    if (optionalStrategy.isEmpty()) {
-      return;
-    }
-
-    StrategyEntity strategy = optionalStrategy.get();
-
-    double existingQuantity;
-
     try {
-      CompletableFuture<ContractData> future = positionService.getSymbolPosition(alert.getSymbol());
-      if (future == null || !future.isDone()) {
-        String message =
-            String.format("CompletableFuture is null or future is not completed. symbol=%s",
-                alert.getSymbol());
-
-        log.error(message);
-        notificationService.notify(message);
+      Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
+      if (optionalStrategy.isEmpty()) {
         return;
       }
 
-      ContractData existingPosition = future.get();
+      AtomicReference<Double> existingQuantity = new AtomicReference<>((double) 0);
 
-      existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
+      positionService.getSymbolPosition(alert.getSymbol())
+          .orTimeout(30, TimeUnit.SECONDS)
+          .thenAccept(position -> {
 
-      log.info("Position validation. alertSymbol={}, existingPosition={}",
-          alert.getSymbol(), existingPosition);
+            existingQuantity.set(position != null ? position.getQuantity() : 0d);
+
+            log.info("Position validation. alertSymbol={}, existingPosition={}",
+                alert.getSymbol(), position);
+
+            if (!checkIfQuantityExecutable(alert, existingQuantity.get())) {
+              return;
+            }
+
+            contractService.requestContract(alert.getSymbol())
+                .orTimeout(30, TimeUnit.SECONDS)
+                .thenAccept(contractDetails -> {
+
+                  tradeService.trade(alert, optionalStrategy.get(), contractDetails,
+                      existingQuantity.get());
+
+                })
+                .exceptionally(ex -> {
+                  log.error("Contract request failed for {}", alert.getSymbol(), ex);
+                  notificationService.notify("Contract request failed: " + ex.getMessage());
+                  return null;
+                });
+          })
+          .exceptionally(ex -> {
+            log.error("Failed to request positions", ex);
+            notificationService.notify("Failed to request positions: " + ex.getMessage());
+            return null;
+          });
+
     } catch (Exception e) {
       log.error("Failed to request positions", e);
       notificationService.notify("Failed to request positions: " + e.getMessage());
       return;
     }
-
-    if (!checkIfQuantityExecutable(alert, existingQuantity)) {
-      return;
-    }
-
-    contractService.requestContract(alert.getSymbol())
-        .thenAccept(contractDetails -> {
-          tradeService.trade(alert, strategy, contractDetails, existingQuantity);
-        })
-        .exceptionally(ex -> {
-          log.error("Contract request failed for {}", alert.getSymbol(), ex);
-          notificationService.notify("Contract request failed: " + ex.getMessage());
-          return null;
-        });
   }
 
   private boolean checkIfQuantityExecutable(AlertEntity alert, double existingQuantity) {
@@ -103,8 +103,10 @@ public class StrategyService {
     }
 
     StrategyEntity strategy = optionalStrategy.get();
-    if (strategy.getMaxPositionAmount().compareTo(alert.getHigh()) == -1) {
+    if (strategy.getMaxPositionAmount().compareTo(alert.getHigh()) < 0) {
       log.error("Strategy: '{}'. MaxPositionAmount is less than price .", alert.getStrategy());
+
+      return Optional.empty();
     }
 
     return optionalStrategy;

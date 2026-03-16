@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
   private final OrderRepository repository;
   private final NotificationService notificationService;
+  private final PositionServiceNew positionService;
   @Lazy
   @Autowired
   private IBClient ibClient;
@@ -177,7 +178,7 @@ public class OrderService {
 
     try {
       if (status.equals(OrderStatus.Filled.name())) {
-        ibClient.requestPositions();
+        positionService.requestPositions();
         notificationService.notify(message);
       }
 

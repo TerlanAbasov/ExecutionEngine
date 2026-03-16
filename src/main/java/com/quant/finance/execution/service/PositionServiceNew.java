@@ -11,8 +11,6 @@ import com.quant.finance.execution.model.ContractData;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,9 +34,6 @@ public class PositionServiceNew {
   private final Map<String, CompletableFuture<ContractData>> positionFutureMap =
       new ConcurrentHashMap<>();
 
-  //private volatile CompletableFuture<Map<String, ContractData>> positionsFuture;
-  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
   /**
    * called before trading to check if position of symbol existing or not.
    *
@@ -46,12 +41,13 @@ public class PositionServiceNew {
    * @return
    */
   public CompletableFuture<ContractData> getSymbolPosition(String symbol) {
-    synchronized (this) {
-      positionFutureMap.putIfAbsent(symbol, new CompletableFuture<>());
+    CompletableFuture<ContractData> future = new CompletableFuture<>();
+    synchronized (positionFutureMap) {
+      positionFutureMap.putIfAbsent(symbol, future);
     }
     ibClient.requestPositions();
 
-    return positionFutureMap.get(symbol);
+    return future;
   }
 
   /**
@@ -59,33 +55,31 @@ public class PositionServiceNew {
    */
   public void requestPositions() {
     synchronized (this) {
-      positionMap.clear();
-      pnlService.clearCollections();
+      //positionMap.clear();
+      pnlService.clearPnlCollections();
     }
     ibClient.requestPositions();
   }
 
-  public void onPosition(String account, Contract contract, Decimal quantity,
-                         double avgCost) {
-
+  public void onPosition(String account, Contract contract, Decimal quantity, double avgCost) {
     try {
       log.info("POSITION. Account={}, symbol={}, conid={}, secType={}, currency={}," +
               " position={} , avgCost={}",
           account, contract.symbol(), contract.conid(), contract.secType().name(),
           contract.currency(), quantity.toString(), DoubleMaxString(avgCost));
 
-      ContractData contractData = buildContractData(contract, quantity, avgCost);
+      ContractData contractData = ContractData.buildContractData(contract, quantity, avgCost);
 
-      synchronized (this) {
+      synchronized (positionFutureMap) {
         CompletableFuture<ContractData> future = positionFutureMap.get(contract.symbol());
         if (future != null && !future.isDone()) {
+          log.warn("Completing future");
           future.complete(contractData);
           positionFutureMap.remove(contract.symbol());
         }
 
         if (contractData.getQuantity() != 0) {
-          positionMap.put(contractData.getSymbol(), contractData);
-          pnlService.requestPnLForSinglePosition(contractData);
+          pnlService.requestPnLForPosition(contractData);
         }
       }
 
@@ -95,45 +89,18 @@ public class PositionServiceNew {
     }
   }
 
-  private static ContractData buildContractData(Contract contract, Decimal quantity,
-                                                double avgCost) {
-    ContractData contractData = ContractData.builder()
-        .symbol(contract.symbol())
-        .securityType(contract.getSecType())
-        .contractId(contract.conid())
-        .currency(contract.currency())
-        .averageCost(avgCost)
-        .quantity(quantity.value().doubleValue())
-        .build();
-    return contractData;
-  }
-
   public void onPositionEnd() {
     log.info("POSITION END");
+    pnlService.notifyAboutPositionsAndPnL();
 
-    try {
-      synchronized (this) {
-        positionFutureMap.forEach((contractSymbol, positionFuture) -> {
-          try {
-            ContractData contractData = positionFuture.get();
-            if (!positionFuture.isDone()) {
-              positionFuture.complete(contractData);
-            }
-          } catch (Exception e) {
-            log.error(e.getMessage(), e);
-          }
-        });
-
-        for (int i = 0; i < 10; i++) {
-          Thread.sleep(1000);
-          if (pnlService.checkSinglePnlCompletion()) {
-            break;
-          }
+    synchronized (positionFutureMap) {
+      positionFutureMap.forEach((symbol, future) -> {
+        if (!future.isDone()) {
+          log.warn("No position found for {}, completing with null", symbol);
+          future.complete(null);
         }
-      }
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
+      });
+      positionFutureMap.clear();
     }
-
   }
 }

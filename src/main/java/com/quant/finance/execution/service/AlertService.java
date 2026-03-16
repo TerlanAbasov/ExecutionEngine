@@ -41,13 +41,13 @@ public class AlertService {
   @Transactional
   public void receiveAlert(TVAlertDto tvAlertDto) {
     AlertEntity alert = alertMapper.toEntity(tvAlertDto);
+    alert.setState(AlertState.RECEIVED);
 
     try {
       log.info("Received alert: {}", tvAlertDto);
       routingService.routeToPartner(tvAlertDto);
       notificationService.notify(tvAlertDto);
       alert = repository.save(alert);
-      //processAlert(alert);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());

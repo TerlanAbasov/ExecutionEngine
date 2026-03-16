@@ -2,7 +2,6 @@ package com.quant.finance.execution.service;
 
 import static com.ib.client.Util.DoubleMaxString;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ib.client.Decimal;
 import com.quant.finance.execution.client.IBClient;
@@ -14,29 +13,36 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PnlService {
-  private final IBClient ibClient;
   private final NotificationService notificationService;
   private final ObjectMapper objectMapper;
   private final ApplicationProperties properties;
+  @Lazy
+  @Autowired
+  private IBClient ibClient;
 
   private final Map<Integer, ContractData> pnlMap = new ConcurrentHashMap<>();
   private final Set<Integer> pendingPnl = ConcurrentHashMap.newKeySet();
 
-  public void clearCollections() {
+  public void clearPnlCollections() {
     pnlMap.clear();
     pendingPnl.clear();
   }
 
-  public void requestPnLForSinglePosition(ContractData contractData) {
+  public void requestPnLForPosition(ContractData contractData) {
     int requestId = EngineUtil.nextRequestId();
+
     pendingPnl.add(requestId);
     pnlMap.put(requestId, contractData);
+
     ibClient.requestSinglePnl(
         requestId, properties.getAccount().getId(), "", contractData.getContractId());
   }
@@ -78,24 +84,38 @@ public class PnlService {
     notificationService.notify(message);
   }
 
-  public boolean checkSinglePnlCompletion() {
-    boolean isCompleted = pendingPnl.isEmpty();
-
+  @Async
+  public void notifyAboutPositionsAndPnL() {
     try {
-      String message =
+      boolean isCompleted = false;
+
+      for (int i = 0; i < 10; i++) {
+        isCompleted = pendingPnl.isEmpty();
+        if (isCompleted) {
+          break;
+        } else {
+          Thread.sleep(1000);
+        }
+      }
+
+      String positions =
           objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
 
       if (isCompleted) {
-        notificationService.notify("Positions: " + message);
+        String message = String.format("Positions: %s", positions);
+        log.info(message);
+        notificationService.notify(message);
       } else {
-        notificationService.notify("Partial snapshot received.\n Positions: " + message);
+        String message = String.format("Partial snapshot received.\n Positions: {}", positions);
+        log.info(message);
+        notificationService.notify(message);
       }
-    } catch (JsonProcessingException e) {
+
+      pnlMap.clear();
+    } catch (Exception e) {
       log.error("Failed to serialize positions", e);
       notificationService.notify(e.getMessage());
     }
-
-    return isCompleted;
   }
 
 }

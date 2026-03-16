@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/trades")
 @RequiredArgsConstructor
-public class TradeController {
+public class  TradeController {
 
   private final CommandDispatcher commandDispatcher;
 

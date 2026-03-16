@@ -1,5 +1,7 @@
 package com.quant.finance.execution.model;
 
+import com.ib.client.Contract;
+import com.ib.client.Decimal;
 import lombok.Builder;
 import lombok.Data;
 
@@ -19,4 +21,19 @@ public class ContractData {
   private Double value;
 
   //todo consider should equals and hashcode be overriten.
+
+
+  public static ContractData buildContractData(Contract contract, Decimal quantity,
+                                                double avgCost) {
+    ContractData contractData = ContractData.builder()
+        .symbol(contract.symbol())
+        .securityType(contract.getSecType())
+        .contractId(contract.conid())
+        .currency(contract.currency())
+        .averageCost(avgCost)
+        .quantity(quantity.value().doubleValue())
+        .build();
+
+    return contractData;
+  }
 }
