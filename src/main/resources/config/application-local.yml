@@ -23,8 +23,6 @@ spring:
     liquibase:
         enabled: true
         change-log: classpath:/changelog/master.yaml
-        default-schema: engine
-        liquibase-schema: engine
 
 application:
     client:

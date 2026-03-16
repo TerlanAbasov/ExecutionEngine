@@ -45,6 +45,7 @@ public class PositionServiceNew {
     synchronized (positionFutureMap) {
       positionFutureMap.putIfAbsent(symbol, future);
     }
+    pnlService.clearPnlCollections();
     ibClient.requestPositions();
 
     return future;
