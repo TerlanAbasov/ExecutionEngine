@@ -33,7 +33,7 @@ public class IBErrorHandler {
       }
 
       isConnectionOk = true;
-    } else if (List.of(2107, 2108, 1101, 1102).contains(code)) {
+    } else if (List.of(2107, 2108, 1101, 1102, 10186).contains(code)) {
       log.info("INFO. {}", errorText);
     } else if (List.of(502, 504, 507, 1100, 2110).contains(code)) {
       log.error("CONNECTION ERROR. {}", errorText);

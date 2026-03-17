@@ -1,13 +1,12 @@
+- protect from selling non-existing symbol
 - make custom exceptions
 - rate limit endpoints and telegram bot
 - create entity for enabling/disabling trading - kill switch
 - end of day jobs. pnl, close positions and etc. according to strategy trade type(intraday, swing...)
-- cancel open child orders when close parent order
 - prod credentials as env variables
 - reconnection job or command
 - risk management
 - checker jobs
-- check strategy status
 - AI integrations
 
 --On reconnect → call reqOpenOrders() - Rebuild local state from openOrder() callbacks

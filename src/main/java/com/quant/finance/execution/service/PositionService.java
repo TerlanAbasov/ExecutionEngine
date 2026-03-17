@@ -131,9 +131,9 @@ public class PositionService {
           DoubleMaxString(realizedPnl), value);
 
       contractData.setQuantity(positions.value().doubleValue());
-      contractData.setDailyPnL(DoubleMaxString(dailyPnL));
-      contractData.setUnrealizedPnl(DoubleMaxString(unrealizedPnl));
-      contractData.setRealizedPnl(DoubleMaxString(realizedPnl));
+      contractData.setDailyPnL(ContractData.scaleDoubleValue(DoubleMaxString(dailyPnL)));
+      contractData.setUnrealizedPnl(ContractData.scaleDoubleValue(DoubleMaxString(unrealizedPnl)));
+      contractData.setRealizedPnl(ContractData.scaleDoubleValue(DoubleMaxString(realizedPnl)));
       contractData.setValue(value);
     }
 

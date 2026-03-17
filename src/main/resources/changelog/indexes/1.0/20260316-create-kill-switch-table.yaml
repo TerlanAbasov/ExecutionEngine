@@ -1,0 +1,19 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 20260316-create-kill-switch-table
+            author: Tarlan Abasov
+            changes:
+                -   createIndex:
+                        tableName: kill_switch
+                        indexName: idx_kill_switch_active
+                        columns:
+                            -   column:
+                                    name: is_active
+                -   createIndex:
+                        tableName: kill_switch
+                        indexName: idx_kill_switch_scope
+                        columns:
+                            -   column:
+                                    name: scope
+                            -   column:
+                                    name: scope_value

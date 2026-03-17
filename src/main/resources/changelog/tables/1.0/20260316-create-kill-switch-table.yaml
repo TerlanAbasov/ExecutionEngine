@@ -1,0 +1,86 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 20260316-create-kill-switch-table
+            author: Tarlan Abasov
+            changes:
+                -   createTable:
+                        tableName: kill_switch
+                        columns:
+                            -   column:
+                                    name: id
+                                    type: INT
+                                    autoIncrement: true
+                                    constraints:
+                                        primaryKey: true
+                                        nullable: false
+                            -   column:
+                                    name: scope
+                                    type: VARCHAR(20)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: scope_value
+                                    type: VARCHAR(100)
+                            -   column:
+                                    name: is_active
+                                    type: BOOLEAN
+                                    defaultValueBoolean: false
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: reason
+                                    type: VARCHAR(30)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: reason_detail
+                                    type: VARCHAR(255)
+                            -   column:
+                                    name: max_daily_loss
+                                    type: NUMERIC(15,2)
+                            -   column:
+                                    name: max_order_count
+                                    type: INTEGER
+
+                            -   column:
+                                    name: max_error_count
+                                    type: INTEGER
+                            -   column:
+                                    name: order_window_minutes
+                                    type: INTEGER
+                            -   column:
+                                    name: trigger_action
+                                    type: VARCHAR(30)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: close_positions_on_kill
+                                    type: BOOLEAN
+                                    defaultValueBoolean: false
+                            -   column:
+                                    name: cancel_open_orders_on_kill
+                                    type: BOOLEAN
+                                    defaultValueBoolean: false
+                            -   column:
+                                    name: scheduled_start
+                                    type: TIME
+                            -   column:
+                                    name: scheduled_end
+                                    type: TIME
+                            -   column:
+                                    name: created_at
+                                    type: TIMESTAMP
+                                    defaultValueComputed: CURRENT_TIMESTAMP
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: updated_at
+                                    type: TIMESTAMP
+                                    defaultValueComputed: CURRENT_TIMESTAMP
+                                    constraints:
+                                        nullable: false
+
+                            -   addUniqueConstraint:
+                                    tableName: kill_switch
+                                    columnNames: scope, scope_value
+                                    constraintName: uq_kill_switch_scope

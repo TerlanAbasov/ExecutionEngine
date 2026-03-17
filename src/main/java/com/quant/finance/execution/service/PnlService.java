@@ -8,6 +8,8 @@ import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.model.ContractData;
 import com.quant.finance.execution.util.EngineUtil;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,10 +69,10 @@ public class PnlService {
           DoubleMaxString(realizedPnl), value);
 
       contractData.setQuantity(positions.value().doubleValue());
-      contractData.setDailyPnL(DoubleMaxString(dailyPnL));
-      contractData.setUnrealizedPnl(DoubleMaxString(unrealizedPnl));
-      contractData.setRealizedPnl(DoubleMaxString(realizedPnl));
-      contractData.setValue(value);
+      contractData.setDailyPnL(ContractData.scaleDoubleValue(DoubleMaxString(dailyPnL)));
+      contractData.setUnrealizedPnl(ContractData.scaleDoubleValue(DoubleMaxString(unrealizedPnl)));
+      contractData.setRealizedPnl(ContractData.scaleDoubleValue(DoubleMaxString(realizedPnl)));
+      contractData.setValue(ContractData.scaleDoubleValue(value));
     }
 
     pendingPnl.remove(requestId);
@@ -98,17 +100,21 @@ public class PnlService {
         }
       }
 
-      String positions =
-          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
+      List<ContractData> allPositions = new ArrayList<>(pnlMap.values());
+      String header = isCompleted
+          ? "Positions:\n"
+          : "Partial snapshot received. Positions:\n";
 
-      if (isCompleted) {
-        String message = String.format("Positions: %s", positions);
-        log.info(message);
+      for (int i = 0; i < allPositions.size(); i += 15) {
+        List<ContractData> chunk = allPositions.subList(i, Math.min(i + 15, allPositions.size()));
+        String positionsChunk =
+            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(chunk);
+        String message = (i == 0 ? header : "") + positionsChunk;
+        log.info("{}", message);
         notificationService.notify(message);
-      } else {
-        String message = String.format("Partial snapshot received.\n Positions: {}", positions);
-        log.info(message);
-        notificationService.notify(message);
+
+        log.info(String.valueOf(positionsChunk.length()));
+        log.info(String.valueOf(chunk.size()));
       }
 
       pnlMap.clear();
