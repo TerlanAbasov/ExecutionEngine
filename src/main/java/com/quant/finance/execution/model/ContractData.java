@@ -1,5 +1,6 @@
 package com.quant.finance.execution.model;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@JsonFilter("contractFilter")
 public class ContractData {
   private String symbol;
   private Integer contractId;

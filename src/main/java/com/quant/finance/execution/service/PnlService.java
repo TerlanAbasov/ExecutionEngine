@@ -3,6 +3,8 @@ package com.quant.finance.execution.service;
 import static com.ib.client.Util.DoubleMaxString;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.ib.client.Decimal;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
@@ -30,6 +32,12 @@ public class PnlService {
   @Lazy
   @Autowired
   private IBClient ibClient;
+
+  SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter
+      .serializeAllExcept("contractId", "securityType", "currency");
+
+  SimpleFilterProvider filters = new SimpleFilterProvider()
+      .addFilter("contractFilter", filter);
 
   private final Map<Integer, ContractData> pnlMap = new ConcurrentHashMap<>();
   private final Set<Integer> pendingPnl = ConcurrentHashMap.newKeySet();
@@ -101,23 +109,21 @@ public class PnlService {
       }
 
       List<ContractData> allPositions = new ArrayList<>(pnlMap.values());
+      pnlMap.clear();
+
       String header = isCompleted
           ? "Positions:\n"
           : "Partial snapshot received. Positions:\n";
 
-      for (int i = 0; i < allPositions.size(); i += 15) {
-        List<ContractData> chunk = allPositions.subList(i, Math.min(i + 15, allPositions.size()));
+      for (int i = 0; i < allPositions.size(); i += 20) {
+        List<ContractData> chunk = allPositions.subList(i, Math.min(i + 20, allPositions.size()));
         String positionsChunk =
-            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(chunk);
+            objectMapper.writer(filters).withDefaultPrettyPrinter().writeValueAsString(chunk);
+
         String message = (i == 0 ? header : "") + positionsChunk;
         log.info("{}", message);
         notificationService.notify(message);
-
-        log.info(String.valueOf(positionsChunk.length()));
-        log.info(String.valueOf(chunk.size()));
       }
-
-      pnlMap.clear();
     } catch (Exception e) {
       log.error("Failed to serialize positions", e);
       notificationService.notify(e.getMessage());

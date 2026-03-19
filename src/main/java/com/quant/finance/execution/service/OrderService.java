@@ -178,7 +178,7 @@ public class OrderService {
 
     try {
       if (status.equals(OrderStatus.Filled.name())) {
-        positionService.requestPositions();
+        //positionService.requestPositions();
         notificationService.notify(message);
       }
 
