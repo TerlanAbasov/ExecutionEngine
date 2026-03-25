@@ -15,6 +15,7 @@ import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
+import com.quant.finance.execution.model.ContractData;
 import com.quant.finance.execution.repository.OrderRepository;
 import com.quant.finance.execution.util.EngineUtil;
 import java.math.BigDecimal;
@@ -34,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
   private final OrderRepository repository;
   private final NotificationService notificationService;
-  private final PositionServiceNew positionService;
+  private final PositionService positionService;
   @Lazy
   @Autowired
   private IBClient ibClient;
@@ -78,7 +79,7 @@ public class OrderService {
 
   public OrderEntity buildAndSaveParentOrder(AlertEntity alert, StrategyEntity strategy,
                                              ContractDetails contractDetails,
-                                             double existingQuantity) {
+                                             ContractData existingPosition) {
     OrderEntity order = OrderEntity.builder()
         .brokerOrderId(IBClient.getNextOrderId())
         .strategy(strategy)
@@ -100,6 +101,7 @@ public class OrderService {
       order.setStopLossPrice(calculateStopLossPrice(strategy, alert));
     } else if (alert.getAction() == Action.SELL) {
       order.setOrderType(strategy.getSellOrderType());
+      double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
       order.setQuantity(existingQuantity);
 
       if (strategy.getSellOrderType() == OrderType.LMT) {

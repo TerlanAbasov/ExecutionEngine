@@ -12,6 +12,7 @@ import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.enums.AlertState;
+import com.quant.finance.execution.model.ContractData;
 import com.quant.finance.execution.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,10 +36,10 @@ public class TradeService {
 
   @Transactional
   public void trade(AlertEntity alert, StrategyEntity strategy, ContractDetails contractDetails,
-                    double existingQuantity) {
+                    ContractData existingPosition) {
     try {
       OrderEntity parentOrderEntity =
-          orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingQuantity);
+          orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingPosition);
       Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
       ibClient.placeOrder(contractDetails.contract(), parentOrder);
 
@@ -46,11 +47,11 @@ public class TradeService {
         pleaceBacketOrders(contractDetails, parentOrderEntity, parentOrder);
       }
 
-      alertService.updateState(alert, AlertState.TRADED);
+      alertService.updateState(alert, AlertState.PROCESSED);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       notificationService.notify(String.format("TradeService.trade(). %s", e.getMessage()));
-      alertService.updateStateAndDescription(alert, AlertState.TRADED, e.getMessage());
+      alertService.updateStateAndDescription(alert, AlertState.PROCESSED, e.getMessage());
     }
   }
 

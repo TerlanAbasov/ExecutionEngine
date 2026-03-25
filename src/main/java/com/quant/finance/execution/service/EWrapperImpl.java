@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service;
 public class EWrapperImpl implements EWrapper {
   private final NotificationService notificationService;
   private final ApplicationProperties properties;
-  private final PositionServiceNew positionService;
+  private final PositionService positionService;
   private final PnlService pnlService;
   private final ContractService contractService;
   private final OrderService orderService;

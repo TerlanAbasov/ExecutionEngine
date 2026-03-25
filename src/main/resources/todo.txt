@@ -1,4 +1,5 @@
 - protect from selling non-existing symbol
+- create health checker job for webhook endpoint.
 - make custom exceptions
 - rate limit endpoints and telegram bot
 - create entity for enabling/disabling trading - kill switch

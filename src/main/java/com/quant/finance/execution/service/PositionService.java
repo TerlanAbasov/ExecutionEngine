@@ -2,22 +2,15 @@ package com.quant.finance.execution.service;
 
 import static com.ib.client.Util.DoubleMaxString;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.model.ContractData;
-import com.quant.finance.execution.util.EngineUtil;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,46 +24,66 @@ public class PositionService {
   private final NotificationService notificationService;
   private final ObjectMapper objectMapper;
   private final ApplicationProperties properties;
+  private final PnlService pnlService;
+
   @Lazy
   @Autowired
   private IBClient ibClient;
 
   private final Map<String, ContractData> positionMap = new ConcurrentHashMap<>();
-  private volatile CompletableFuture<Map<String, ContractData>> positionsFuture;
-  private final Map<Integer, ContractData> pnlMap = new ConcurrentHashMap<>();
-  private final Set<Integer> pendingPnl = ConcurrentHashMap.newKeySet();
-  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  private final Map<String, CompletableFuture<ContractData>> positionFutureMap =
+      new ConcurrentHashMap<>();
 
-  public CompletableFuture<Map<String, ContractData>> requestPositions() {
-    synchronized (this) {
-      positionMap.clear();
-      positionsFuture = new CompletableFuture<>();
-      ibClient.requestPositions();
-
-      return positionsFuture;
+  /**
+   * called before trading to check if position of symbol existing or not.
+   *
+   * @param symbol
+   * @return
+   */
+  public CompletableFuture<ContractData> getSymbolPosition(String symbol) {
+    CompletableFuture<ContractData> future = new CompletableFuture<>();
+    synchronized (positionFutureMap) {
+      positionFutureMap.putIfAbsent(symbol, future);
     }
+    pnlService.clearPnlCollections();
+    ibClient.requestPositions();
+
+    return future;
   }
 
-  public void onPosition(String account, Contract contract, Decimal quantity,
-                         double avgCost) {
+  /**
+   * called by api or webhook to get update and notification about positions
+   */
+  public void requestPositions() {
+    synchronized (this) {
+      //positionMap.clear();
+      pnlService.clearPnlCollections();
+    }
+    ibClient.requestPositions();
+  }
+
+  public void onPosition(String account, Contract contract, Decimal quantity, double avgCost) {
     try {
       log.info("POSITION. Account={}, symbol={}, conid={}, secType={}, currency={}," +
               " position={} , avgCost={}",
           account, contract.symbol(), contract.conid(), contract.secType().name(),
           contract.currency(), quantity.toString(), DoubleMaxString(avgCost));
 
-      ContractData contractData = ContractData.builder()
-          .symbol(contract.symbol())
-          .securityType(contract.getSecType())
-          .contractId(contract.conid())
-          .currency(contract.currency())
-          .averageCost(avgCost)
-          .quantity(quantity.value().doubleValue())
-          .build();
+      ContractData contractData = ContractData.buildContractData(contract, quantity, avgCost);
 
-      if (contractData.getQuantity() != 0) {
-        positionMap.put(contractData.getSymbol(), contractData);
+      synchronized (positionFutureMap) {
+        CompletableFuture<ContractData> future = positionFutureMap.get(contract.symbol());
+        if (future != null && !future.isDone()) {
+          log.warn("Completing future");
+          future.complete(contractData);
+          positionFutureMap.remove(contract.symbol());
+        }
+
+        if (contractData.getQuantity() != 0) {
+          pnlService.requestPnLForPosition(contractData);
+        }
       }
+
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       notificationService.notify(e.getMessage());
@@ -79,92 +92,17 @@ public class PositionService {
 
   public void onPositionEnd() {
     log.info("POSITION END");
+    pnlService.notifyAboutPositionsAndPnL();
 
-    try {
-      Map<String, ContractData> snapshot = new HashMap<>(positionMap);
+    synchronized (positionFutureMap) {
+      positionFutureMap.forEach((symbol, future) -> {
+        if (!future.isDone()) {
+          log.warn("No position found for {}, completing with null", symbol);
 
-      if (this.positionsFuture != null) {
-        positionsFuture.complete(snapshot);
-      }
-
-      snapshot.forEach((symbol, contractData) -> {
-        requestPnLForPositions(contractData);
+          future.complete(null);
+        }
       });
-
-      positionMap.clear();
-      scheduler.schedule(this::checkSinglePnlCompletion, 5, TimeUnit.SECONDS);
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      notificationService.notify(e.getMessage());
+      positionFutureMap.clear();
     }
   }
-
-  private void requestPnLForPositions(ContractData contractData) {
-    int requestId = EngineUtil.nextRequestId();
-    pnlMap.put(requestId, contractData);
-    pendingPnl.add(requestId);
-
-    ibClient.requestSinglePnl(
-        requestId,
-        properties.getAccount().getId(),
-        "",
-        contractData.getContractId());
-  }
-
-  public void pnlSingle(int requestId, Decimal positions, double dailyPnL,
-                        double unrealizedPnl,
-                        double realizedPnl, double value) {
-    ContractData contractData = pnlMap.get(requestId);
-
-    if (contractData == null) {
-      log.warn("Contract not found for requestId={}", requestId);
-      log.info("pnlSingle. requestId={}, positions={}, dailyPnL={}," +
-              " unrealizedPnl={}, realizedPnl={}, value={}",
-          requestId, positions, DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
-          DoubleMaxString(realizedPnl), value);
-    } else {
-
-      log.info("pnlSingle. symbol={}, conId={}. requestId={}, positions={}, dailyPnL={}," +
-              " unrealizedPnl={}, realizedPnl={}, value={}",
-          contractData.getSymbol(), contractData.getContractId(), requestId, positions,
-          DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
-          DoubleMaxString(realizedPnl), value);
-
-      contractData.setQuantity(positions.value().doubleValue());
-      contractData.setDailyPnL(ContractData.scaleDoubleValue(DoubleMaxString(dailyPnL)));
-      contractData.setUnrealizedPnl(ContractData.scaleDoubleValue(DoubleMaxString(unrealizedPnl)));
-      contractData.setRealizedPnl(ContractData.scaleDoubleValue(DoubleMaxString(realizedPnl)));
-      contractData.setValue(value);
-    }
-
-
-    pendingPnl.remove(requestId);
-    ibClient.getEClientSocket().cancelPnLSingle(requestId);
-  }
-
-  private void checkSinglePnlCompletion() {
-    try {
-      String message =
-          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pnlMap.values());
-
-      if (pendingPnl.isEmpty()) {
-        notificationService.notify("Positions: " + message);
-      } else {
-        notificationService.notify("Partial snapshot received. Positions: " + message);
-      }
-    } catch (JsonProcessingException e) {
-      log.error("Failed to serialize positions", e);
-      notificationService.notify(e.getMessage());
-    } finally {
-      pnlMap.clear();
-    }
-  }
-
-  public void pnl(int requestId, double dailyPnL, double unrealizedPnl, double realizedPnl) {
-    String message = String.format("PnL. dailyPnL=%f, unrealizedPnl=%f, realizedPnl=%f",
-        dailyPnL, unrealizedPnl, realizedPnl);
-    log.info(message);
-    notificationService.notify(message);
-  }
-
 }

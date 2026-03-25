@@ -3,10 +3,11 @@ package com.quant.finance.execution.service;
 import com.ib.client.Types.Action;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
+import com.quant.finance.execution.enums.AlertState;
+import com.quant.finance.execution.model.ContractData;
 import com.quant.finance.execution.repository.StrategyRepository;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Service;
 public class StrategyService {
   private final StrategyRepository repository;
   private final NotificationService notificationService;
-  private final PositionServiceNew positionService;
+  private final PositionService positionService;
   private final AlertService alertService;
   private final ContractService contractService;
   private final TradeService tradeService;
@@ -29,18 +30,16 @@ public class StrategyService {
         return;
       }
 
-      AtomicReference<Double> existingQuantity = new AtomicReference<>((double) 0);
-
       positionService.getSymbolPosition(alert.getSymbol())
           .orTimeout(30, TimeUnit.SECONDS)
           .thenAccept(position -> {
 
-            existingQuantity.set(position != null ? position.getQuantity() : 0d);
-
             log.info("Position validation. alertSymbol={}, existingPosition={}",
                 alert.getSymbol(), position);
 
-            if (!checkIfQuantityExecutable(alert, existingQuantity.get())) {
+            if (!checkIfQuantityExecutable(alert, position)) {
+              alertService.updateStateAndDescription(alert, AlertState.PROCESSED,
+                  "Quantity check is false.");
               return;
             }
 
@@ -49,7 +48,7 @@ public class StrategyService {
                 .thenAccept(contractDetails -> {
 
                   tradeService.trade(alert, optionalStrategy.get(), contractDetails,
-                      existingQuantity.get());
+                      position);
 
                 })
                 .exceptionally(ex -> {
@@ -71,17 +70,18 @@ public class StrategyService {
     }
   }
 
-  private boolean checkIfQuantityExecutable(AlertEntity alert, double existingQuantity) {
-    if (Action.BUY.equals(alert.getAction()) && existingQuantity > 0) {
-      logInfoAndNotify("Can't buy existing symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
-          alert);
-      return false;
-    } else if (Action.SELL.equals(alert.getAction()) && existingQuantity <= 0) {
-      logInfoAndNotify("Can't sell non existing symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
-          alert);
-      return false;
+  private boolean checkIfQuantityExecutable(AlertEntity alert, ContractData position) {
+    if (Action.BUY.equals(alert.getAction()) && (position == null || position.getQuantity() <= 0)) {
+      return true;
+    } else if (Action.SELL.equals(alert.getAction()) && position != null &&
+        position.getQuantity() > 0) {
+      return true;
     }
-    return true;
+
+    logInfoAndNotify("Can't execute strategy. symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
+        alert);
+
+    return false;
   }
 
   private void logInfoAndNotify(String template, AlertEntity alert) {

@@ -49,6 +49,7 @@ application:
         pairTickerThreadSleep: 2000
         contractFutureTimeout: 60
         alertProcessorFixedDelay: "1000"
+        twsConnectionCheckerFixedDelay: "600000"
 
 management:
     endpoints:

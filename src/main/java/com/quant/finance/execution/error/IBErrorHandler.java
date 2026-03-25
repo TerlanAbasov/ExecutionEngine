@@ -22,6 +22,7 @@ public class IBErrorHandler {
   private final OrderService orderService;
   private final NotificationService notificationService;
 
+  //todo change logic from static to another
   private static boolean isConnectionOk = false;
 
   public void handleError(int orderId, long l, int code, String message, String s1) {
@@ -37,6 +38,7 @@ public class IBErrorHandler {
       log.info("INFO. {}", errorText);
     } else if (List.of(502, 504, 507, 1100, 2110).contains(code)) {
       log.error("CONNECTION ERROR. {}", errorText);
+      notificationService.notify(errorText);
       ibClient.reconnectWithSleep();
     } else if (List.of(1100, 2110).contains(code)) {
       log.error("CONNECTION ERROR. {}", errorText);

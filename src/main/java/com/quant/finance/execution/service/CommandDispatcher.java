@@ -16,7 +16,7 @@ public class CommandDispatcher {
   private final ApplicationProperties properties;
   private final OrderService orderService;
   private final NotificationService notificationService;
-  private final PositionServiceNew positionService;
+  private final PositionService positionService;
 
   public String dispatch(TradeCommandDto cmd) {
     try {

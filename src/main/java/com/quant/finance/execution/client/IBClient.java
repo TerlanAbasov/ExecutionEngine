@@ -120,6 +120,10 @@ public class IBClient {
     return eClientSocket;
   }
 
+  public boolean isConnected() {
+    return eClientSocket.isConnected();
+  }
+
   public static synchronized int getNextOrderId() {
     return orderIds.getAndIncrement();
   }

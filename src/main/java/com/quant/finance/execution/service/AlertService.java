@@ -57,7 +57,7 @@ public class AlertService {
   @Transactional
   public void processAlert(AlertEntity alert) {
     log.info("Processing alert: {}", alert);
-    updateState(alert, AlertState.PROCESSING);
+    updateState(alert, AlertState.IN_PROCESS);
 
     if (alert.getPeerSymbol() == null || alert.getPeerSymbol().isBlank()) {
       try {
