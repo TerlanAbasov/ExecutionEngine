@@ -27,6 +27,8 @@ public class StrategyService {
     try {
       Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
       if (optionalStrategy.isEmpty()) {
+        alertService.updateStateAndDescription(
+            alert, AlertState.FAILED, "Strategy not found.");
         return;
       }
 
@@ -78,18 +80,16 @@ public class StrategyService {
       return true;
     }
 
-    logInfoAndNotify("Can't execute strategy. symbol=%s, peerSymbol=%s, action=%s, isPeer=%b",
-        alert);
+    double existingQuantity = position != null ? position.getQuantity() : 0d;
 
-    return false;
-  }
-
-  private void logInfoAndNotify(String template, AlertEntity alert) {
     String message =
-        String.format(template, alert.getSymbol(), alert.getPeerSymbol(), alert.getAction(),
-            alert.isPeer());
+        String.format(
+            "Quantity check is false. symbol=%s, peerSymbol=%s, action=%s, existingQuantity=%.2f",
+            alert.getSymbol(), alert.getPeerSymbol(), alert.getAction(), existingQuantity);
     log.info(message);
     notificationService.notify(message);
+
+    return false;
   }
 
   public Optional<StrategyEntity> checkStrategy(AlertEntity alert) {

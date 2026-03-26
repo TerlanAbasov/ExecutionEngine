@@ -99,7 +99,12 @@ public class PositionService {
         if (!future.isDone()) {
           log.warn("No position found for {}, completing with null", symbol);
 
-          future.complete(null);
+          ContractData contractData = ContractData.builder()
+              .symbol(symbol)
+              .quantity(0d)
+              .build();
+
+          future.complete(contractData);
         }
       });
       positionFutureMap.clear();

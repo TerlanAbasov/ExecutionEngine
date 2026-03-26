@@ -282,28 +282,6 @@ public class EWrapperImpl implements EWrapper {
   @Override
   public void error(int i, long l, int i1, String s, String s1) {
     ibErrorHandler.handleError(i, l, i1, s, s1);
-
-    //todo
-
-    /*
-    * if (errorCode == 502 || errorCode == 504) {
-
-        log.warn("Lost TWS connection. Reconnecting...");
-
-        client.eDisconnect();
-
-        new Thread(() -> {
-            while (!client.isConnected()) {
-                try {
-                    Thread.sleep(3000);
-                    client.eConnect(host, port, clientId);
-                } catch (Exception e) {
-                    log.error("Reconnect failed", e);
-                }
-            }
-        }).start();
-    }
-    * */
   }
 
   @Override

@@ -1,3 +1,6 @@
+- create positions cache
+- ORDER STATE VALIDATION before action
+- prevent duplicate trade risk. create symbol+action key map and check before trade for duplicate
 - protect from selling non-existing symbol
 - create health checker job for webhook endpoint.
 - make custom exceptions
