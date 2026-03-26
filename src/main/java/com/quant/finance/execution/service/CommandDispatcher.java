@@ -73,6 +73,18 @@ public class CommandDispatcher {
           orderService.cancelOpenOrders();
           yield "📊 Open Orders will be cancelled";
         }
+        case RESTART_ENGINE -> {
+          EngineService.restartEngine();
+          yield "Restarting Engine...";
+        }
+        case STOP_ENGINE -> {
+          EngineService.stopEngine();
+          yield "Stopping Engine...";
+        }
+        case START_ENGINE -> {
+          EngineService.startEngine();
+          yield "Starting Engine...";
+        }
         case UNKNOWN -> {
           String message = "Unknown command : " + cmd.getCommand();
           log.warn(message);

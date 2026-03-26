@@ -2,7 +2,7 @@
 - ORDER STATE VALIDATION before action
 - prevent duplicate trade risk. create symbol+action key map and check before trade for duplicate
 - protect from selling non-existing symbol
-- create health checker job for webhook endpoint.
+- create job to change take profit and stop loss order periodically
 - make custom exceptions
 - rate limit endpoints and telegram bot
 - create entity for enabling/disabling trading - kill switch
