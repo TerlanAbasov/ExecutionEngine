@@ -48,36 +48,42 @@ public class IBClient {
 
   @PostConstruct
   public void connect() {
-    EJavaSignal signal = new EJavaSignal();
-    eClientSocket = new EClientSocket(eWrapper, signal);
+    try {
+      EJavaSignal signal = new EJavaSignal();
+      eClientSocket = new EClientSocket(eWrapper, signal);
 
-    log.info("Connecting to {}:{}", properties.getClient().getGateway().getHost(),
-        properties.getClient().getGateway().getPort());
+      log.info("Connecting to {}:{}", properties.getClient().getGateway().getHost(),
+          properties.getClient().getGateway().getPort());
 
-    eClientSocket.eConnect(properties.getClient().getGateway().getHost(),
-        properties.getClient().getGateway().getPort(), properties.getClient().getGateway().getId());
+      eClientSocket.eConnect(properties.getClient().getGateway().getHost(),
+          properties.getClient().getGateway().getPort(),
+          properties.getClient().getGateway().getId());
 
-    EReader reader = new EReader(eClientSocket, signal);
-    reader.start();
+      EReader reader = new EReader(eClientSocket, signal);
+      reader.start();
 
-    log.info("Connected to {}:{}", properties.getClient().getGateway().getHost(),
-        properties.getClient().getGateway().getPort());
+      log.info("Connected to {}:{}", properties.getClient().getGateway().getHost(),
+          properties.getClient().getGateway().getPort());
 
-    new Thread(() -> {
-      while (eClientSocket.isConnected()) {
-        signal.waitForSignal();
-        //log.info("Waiting for signal");
-        try {
-          reader.processMsgs();
-          //log.info("Processing Messages");
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
+      new Thread(() -> {
+        while (eClientSocket.isConnected()) {
+          signal.waitForSignal();
+          //log.info("Waiting for signal");
+          try {
+            reader.processMsgs();
+            //log.info("Processing Messages");
+          } catch (Exception e) {
+            log.error(e.getMessage(), e);
+          }
         }
-      }
-    }).start();
+      }).start();
 
-    //todo
-    //startAccountUpdates();
+      //todo
+      //startAccountUpdates();
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      notificationService.notify(e.getMessage());
+    }
   }
 
   public static void startAPI() {
@@ -95,7 +101,6 @@ public class IBClient {
     }
     connect();
   }
-
 
   public void reconnectWithSleep() {
     eClientSocket.eDisconnect();

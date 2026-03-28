@@ -39,7 +39,7 @@ application:
             enabled: false
         gateway:
             host: 128.140.74.222
-            port: 7497
+            port: 74970
             id: 3
     contract:
         count: 1

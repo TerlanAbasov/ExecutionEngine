@@ -97,7 +97,7 @@ public class PositionService {
     synchronized (positionFutureMap) {
       positionFutureMap.forEach((symbol, future) -> {
         if (!future.isDone()) {
-          log.warn("No position found for {}, completing with null", symbol);
+          log.warn("No position found for {}, completing future", symbol);
 
           ContractData contractData = ContractData.builder()
               .symbol(symbol)

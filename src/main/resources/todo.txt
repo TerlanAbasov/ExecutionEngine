@@ -3,6 +3,7 @@
 - prevent duplicate trade risk. create symbol+action key map and check before trade for duplicate
 - protect from selling non-existing symbol
 - create job to change take profit and stop loss order periodically
+- Use orderStatus / execDetails. Then calculate stop from filled price. Modify TP and SL order periodically
 - make custom exceptions
 - rate limit endpoints and telegram bot
 - create entity for enabling/disabling trading - kill switch
