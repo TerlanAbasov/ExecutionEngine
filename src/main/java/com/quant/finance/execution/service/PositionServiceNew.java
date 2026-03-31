@@ -95,6 +95,14 @@ public class PositionServiceNew {
 
       String header = String.format("Positions of %s\n", properties.getAccount().getId());
 
+      if (allPositions.isEmpty()) {
+        String message = "No position";
+        log.info("{}", message);
+        notificationService.notify(message);
+
+        return;
+      }
+
       for (int i = 0; i < allPositions.size(); i += 20) {
         List<Position> chunk = allPositions.subList(i, Math.min(i + 20, allPositions.size()));
         String positionsChunk =
