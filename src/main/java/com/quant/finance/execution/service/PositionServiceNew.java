@@ -48,7 +48,7 @@ public class PositionServiceNew {
    * @param symbol
    * @return
    */
-  public Position getPositionBySymbol(String symbol) {
+  public synchronized Position getPositionBySymbol(String symbol) {
     return positionMap.get(properties.getAccount().getId() + ":" + symbol);
   }
 
@@ -57,6 +57,9 @@ public class PositionServiceNew {
    */
 
   public void syncronizePositions() {
+    synchronized (positionMap) {
+      positionMap.clear();
+    }
     ibClient.requestPositions();
   }
 
@@ -70,7 +73,9 @@ public class PositionServiceNew {
       Position position = Position.buildPosition(contract, quantity, avgCost);
 
       if (position.getQuantity() != 0) {
-        positionMap.put(account + ":" + contract.symbol(), position);
+        synchronized (positionMap) {
+          positionMap.put(account + ":" + contract.symbol(), position);
+        }
         pnlService.requestPnLForPosition(position);
       }
     } catch (Exception e) {
