@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AlertProcessScheduler {
+public class AlertScheduler {
   private final AlertRepository alertRepository;
   private final AlertService alertService;
 

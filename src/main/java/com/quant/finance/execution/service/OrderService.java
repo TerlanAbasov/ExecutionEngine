@@ -15,7 +15,7 @@ import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
-import com.quant.finance.execution.model.ContractData;
+import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.OrderRepository;
 import com.quant.finance.execution.util.EngineUtil;
 import java.math.BigDecimal;
@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
   private final OrderRepository repository;
   private final NotificationService notificationService;
-  private final PositionService positionService;
+  private final PositionServiceNew positionService;
   @Lazy
   @Autowired
   private IBClient ibClient;
@@ -79,7 +79,7 @@ public class OrderService {
 
   public OrderEntity buildAndSaveParentOrder(AlertEntity alert, StrategyEntity strategy,
                                              ContractDetails contractDetails,
-                                             ContractData existingPosition) {
+                                             Position existingPosition) {
     OrderEntity order = OrderEntity.builder()
         .brokerOrderId(IBClient.getNextOrderId())
         .strategy(strategy)
@@ -180,7 +180,7 @@ public class OrderService {
 
     try {
       if (status.equals(OrderStatus.Filled.name())) {
-        //positionService.requestPositions();
+        positionService.syncronizePositions();
         notificationService.notify(message);
       }
 

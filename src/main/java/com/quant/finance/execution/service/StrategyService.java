@@ -4,7 +4,7 @@ import com.ib.client.Types.Action;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.enums.AlertState;
-import com.quant.finance.execution.model.ContractData;
+import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.StrategyRepository;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -18,12 +18,12 @@ import org.springframework.stereotype.Service;
 public class StrategyService {
   private final StrategyRepository repository;
   private final NotificationService notificationService;
-  private final PositionService positionService;
+  private final PositionServiceNew positionService;
   private final AlertService alertService;
   private final ContractService contractService;
   private final TradeService tradeService;
 
-  public void executeStrategy(AlertEntity alert) {
+ /* public void executeStrategy(AlertEntity alert) {
     try {
       Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
       if (optionalStrategy.isEmpty()) {
@@ -71,8 +71,49 @@ public class StrategyService {
       return;
     }
   }
+*/
+  public void executeStrategyNew(AlertEntity alert) {
+    try {
+      Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
+      if (optionalStrategy.isEmpty()) {
+        alertService.updateStateAndDescription(
+            alert, AlertState.FAILED, "Strategy not found.");
+        return;
+      }
 
-  private boolean checkIfQuantityExecutable(AlertEntity alert, ContractData position) {
+      Position position = positionService.getPositionBySymbol(alert.getSymbol());
+
+      log.info("Position validation. alertSymbol={}, existingPosition={}",
+          alert.getSymbol(), position);
+
+      if (!checkIfQuantityExecutable(alert, position)) {
+        alertService.updateStateAndDescription(alert, AlertState.PROCESSED,
+            "Quantity check is false.");
+        return;
+      }
+
+
+      contractService.requestContract(alert.getSymbol())
+          .orTimeout(30, TimeUnit.SECONDS)
+          .thenAccept(contractDetails -> {
+
+            tradeService.trade(alert, optionalStrategy.get(), contractDetails,
+                position);
+
+          })
+          .exceptionally(ex -> {
+            log.error("Contract request failed for {}", alert.getSymbol(), ex);
+            notificationService.notify("Contract request failed: " + ex.getMessage());
+            return null;
+          });
+    } catch (Exception e) {
+      log.error("Failed to request positions", e);
+      notificationService.notify("Failed to request positions: " + e.getMessage());
+      return;
+    }
+  }
+
+  private boolean checkIfQuantityExecutable(AlertEntity alert, Position position) {
     if (Action.BUY.equals(alert.getAction()) && (position == null || position.getQuantity() <= 0)) {
       return true;
     } else if (Action.SELL.equals(alert.getAction()) && position != null &&

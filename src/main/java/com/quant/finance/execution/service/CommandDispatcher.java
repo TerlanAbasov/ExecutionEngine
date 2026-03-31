@@ -16,13 +16,17 @@ public class CommandDispatcher {
   private final ApplicationProperties properties;
   private final OrderService orderService;
   private final NotificationService notificationService;
-  private final PositionService positionService;
+  private final PositionServiceNew positionService;
 
   public String dispatch(TradeCommandDto cmd) {
     try {
       return switch (cmd.getCommand()) {
         case POSITIONS -> {
-          positionService.requestPositions();
+          positionService.sendPositions();
+          yield "📊 Open Positions will be sent";
+        }
+        case SYNC_POSITIONS -> {
+          positionService.syncronizePositions();
           yield "📊 Open Positions will be sent";
         }
         case PNL -> {

@@ -10,22 +10,18 @@ import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.util.EngineUtil;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PnlService {
+public class PnlServiceNew {
   private final NotificationService notificationService;
   private final ObjectMapper objectMapper;
   private final ApplicationProperties properties;
@@ -40,17 +36,13 @@ public class PnlService {
       .addFilter("positionFilter", filter);
 
   private final Map<Integer, Position> pnlMap = new ConcurrentHashMap<>();
-  private final Set<Integer> pendingPnl = ConcurrentHashMap.newKeySet();
 
   public void clearPnlCollections() {
     pnlMap.clear();
-    pendingPnl.clear();
   }
 
   public void requestPnLForPosition(Position position) {
     int requestId = EngineUtil.nextRequestId();
-
-    pendingPnl.add(requestId);
     pnlMap.put(requestId, position);
 
     ibClient.requestSinglePnl(
@@ -83,7 +75,6 @@ public class PnlService {
       position.setValue(Position.scaleDoubleValue(value));
     }
 
-    pendingPnl.remove(requestId);
     ibClient.getEClientSocket().cancelPnLSingle(requestId);
   }
 
@@ -93,41 +84,4 @@ public class PnlService {
     log.info(message);
     notificationService.notify(message);
   }
-
-  @Async
-  public void notifyAboutPositionsAndPnL() {
-    try {
-      boolean isCompleted = false;
-
-      for (int i = 0; i < 10; i++) {
-        isCompleted = pendingPnl.isEmpty();
-        if (isCompleted) {
-          break;
-        } else {
-          Thread.sleep(1000);
-        }
-      }
-
-      List<Position> allPositions = new ArrayList<>(pnlMap.values());
-      pnlMap.clear();
-
-      String header = isCompleted
-          ? "Positions:\n"
-          : "Partial snapshot received. Positions:\n";
-
-      for (int i = 0; i < allPositions.size(); i += 20) {
-        List<Position> chunk = allPositions.subList(i, Math.min(i + 20, allPositions.size()));
-        String positionsChunk =
-            objectMapper.writer(filters).withDefaultPrettyPrinter().writeValueAsString(chunk);
-
-        String message = (i == 0 ? header : "") + positionsChunk;
-        log.info("{}", message);
-        notificationService.notify(message);
-      }
-    } catch (Exception e) {
-      log.error("Failed to serialize positions", e);
-      notificationService.notify(e.getMessage());
-    }
-  }
-
 }

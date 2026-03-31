@@ -52,6 +52,7 @@ public class ApplicationProperties {
   public static class Params {
     private Long pairTickerThreadSleep;
     private Integer contractFutureTimeout;
+    private Long startUpDelay;
   }
 
 }

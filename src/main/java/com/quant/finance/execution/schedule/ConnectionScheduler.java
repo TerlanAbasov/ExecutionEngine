@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ConnectionCheckerScheduler {
+public class ConnectionScheduler {
   private final IBClient ibClient;
   private final NotificationService notificationService;
 

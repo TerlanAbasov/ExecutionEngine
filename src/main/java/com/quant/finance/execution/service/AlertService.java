@@ -61,7 +61,7 @@ public class AlertService {
 
     if (alert.getPeerSymbol() == null || alert.getPeerSymbol().isBlank()) {
       try {
-        strategyService.executeStrategy(alert);
+        strategyService.executeStrategyNew(alert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
@@ -75,9 +75,9 @@ public class AlertService {
     if (alert.getAction() == Types.Action.BUY) {
       try {
         AlertEntity peerAlert = alert.duplicateForPeerTickerProcessing();
-        strategyService.executeStrategy(peerAlert);
+        strategyService.executeStrategyNew(peerAlert);
         Thread.sleep(properties.getParams().getPairTickerThreadSleep());
-        strategyService.executeStrategy(alert);
+        strategyService.executeStrategyNew(alert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
@@ -86,10 +86,10 @@ public class AlertService {
       }
     } else {
       try {
-        strategyService.executeStrategy(alert);
+        strategyService.executeStrategyNew(alert);
         Thread.sleep(properties.getParams().getPairTickerThreadSleep());
         AlertEntity peerAlert = alert.duplicateForPeerTickerProcessing();
-        strategyService.executeStrategy(peerAlert);
+        strategyService.executeStrategyNew(peerAlert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
