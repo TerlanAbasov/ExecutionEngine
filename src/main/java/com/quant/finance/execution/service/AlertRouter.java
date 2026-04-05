@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AlertRoutingService {
+public class AlertRouter {
   private final RoutingClient routingClient;
 
   @Async

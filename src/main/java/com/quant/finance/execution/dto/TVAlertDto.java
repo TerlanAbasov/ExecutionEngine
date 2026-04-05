@@ -8,6 +8,7 @@ public class TVAlertDto {
   private String buy;
   private String sell;
   private String peerTicker;
+  private String assetClass;
   private String strategy;
   private String routing;
   private String exchange;

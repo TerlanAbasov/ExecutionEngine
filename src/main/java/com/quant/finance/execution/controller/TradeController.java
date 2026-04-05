@@ -1,7 +1,7 @@
 package com.quant.finance.execution.controller;
 
 import com.quant.finance.execution.dto.TradeCommandDto;
-import com.quant.finance.execution.service.CommandDispatcher;
+import com.quant.finance.execution.command.CommandDispatcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

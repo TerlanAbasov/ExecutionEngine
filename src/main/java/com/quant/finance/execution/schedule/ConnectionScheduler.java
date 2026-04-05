@@ -17,9 +17,10 @@ public class ConnectionScheduler {
   @Scheduled(fixedDelayString = "${application.params.twsConnectionCheckerFixedDelay}")
   public void checkConnectivity() {
     try {
-      Thread.sleep(5000);
+      Thread.sleep(10000);
       if (!ibClient.isConnected()) {
-        notificationService.notify("Engine is not connect to TWS API.");
+        log.error("Engine is not connected to TWS API.");
+        notificationService.notify("Engine is not connected to TWS API.");
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);

@@ -62,8 +62,10 @@ public class IBClient {
       EReader reader = new EReader(eClientSocket, signal);
       reader.start();
 
-      log.info("Connected to {}:{}", properties.getClient().getGateway().getHost(),
-          properties.getClient().getGateway().getPort());
+      if (isConnected()) {
+        log.info("Connected to {}:{}", properties.getClient().getGateway().getHost(),
+            properties.getClient().getGateway().getPort());
+      }
 
       new Thread(() -> {
         while (eClientSocket.isConnected()) {
@@ -92,36 +94,11 @@ public class IBClient {
     }
   }
 
-  public void reconnect() {
-    eClientSocket.eDisconnect();
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      log.error(e.getMessage(), e);
-    }
-    connect();
-  }
-
-  public void reconnectWithSleep() {
-    eClientSocket.eDisconnect();
-    try {
-      Thread.sleep(60000);
-    } catch (InterruptedException e) {
-      log.error(e.getMessage(), e);
-    }
-    connect();
-  }
-
   public void disconnect() {
     eClientSocket.eDisconnect();
   }
 
   public EClientSocket getEClientSocket() {
-    if (!eClientSocket.isConnected()) {
-      disconnect();
-      connect();
-    }
-
     return eClientSocket;
   }
 
@@ -147,9 +124,9 @@ public class IBClient {
     try {
       message = String.format(
           "Placing order. Id=%d, parentId=%d, symbol=%s, action=%s, orderType=%s," +
-              " quantity=%d, limitPrice=%s, auxPrice=%s, tif=%s, transmit=%b",
+              " quantity=%d, cashQty=%s, limitPrice=%s, auxPrice=%s, tif=%s, transmit=%b",
           order.orderId(), order.parentId(), contract.symbol(), order.action().name(),
-          order.getOrderType(), order.totalQuantity().longValue(),
+          order.getOrderType(), order.totalQuantity().longValue(), order.cashQty(),
           Util.DoubleMaxString(order.lmtPrice()), Util.DoubleMaxString(order.auxPrice()),
           order.tif().name(), order.transmit());
 

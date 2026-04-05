@@ -29,6 +29,9 @@ databaseChangeLog:
                                     constraints:
                                         nullable: false
                             -   column:
+                                    name: asset_class
+                                    type: VARCHAR(20)
+                            -   column:
                                     name: exchange
                                     type: VARCHAR(50)
                             -   column:

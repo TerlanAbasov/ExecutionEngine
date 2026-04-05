@@ -18,61 +18,12 @@ import org.springframework.stereotype.Service;
 public class StrategyService {
   private final StrategyRepository repository;
   private final NotificationService notificationService;
-  private final PositionServiceNew positionService;
+  private final PositionService positionService;
   private final AlertService alertService;
   private final ContractService contractService;
   private final TradeService tradeService;
 
- /* public void executeStrategy(AlertEntity alert) {
-    try {
-      Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
-      if (optionalStrategy.isEmpty()) {
-        alertService.updateStateAndDescription(
-            alert, AlertState.FAILED, "Strategy not found.");
-        return;
-      }
-
-      positionService.getSymbolPosition(alert.getSymbol())
-          .orTimeout(30, TimeUnit.SECONDS)
-          .thenAccept(position -> {
-
-            log.info("Position validation. alertSymbol={}, existingPosition={}",
-                alert.getSymbol(), position);
-
-            if (!checkIfQuantityExecutable(alert, position)) {
-              alertService.updateStateAndDescription(alert, AlertState.PROCESSED,
-                  "Quantity check is false.");
-              return;
-            }
-
-            contractService.requestContract(alert.getSymbol())
-                .orTimeout(30, TimeUnit.SECONDS)
-                .thenAccept(contractDetails -> {
-
-                  tradeService.trade(alert, optionalStrategy.get(), contractDetails,
-                      position);
-
-                })
-                .exceptionally(ex -> {
-                  log.error("Contract request failed for {}", alert.getSymbol(), ex);
-                  notificationService.notify("Contract request failed: " + ex.getMessage());
-                  return null;
-                });
-          })
-          .exceptionally(ex -> {
-            log.error("Failed to request positions", ex);
-            notificationService.notify("Failed to request positions: " + ex.getMessage());
-            return null;
-          });
-
-    } catch (Exception e) {
-      log.error("Failed to request positions", e);
-      notificationService.notify("Failed to request positions: " + e.getMessage());
-      return;
-    }
-  }
-*/
-  public void executeStrategyNew(AlertEntity alert) {
+  public void executeStrategy(AlertEntity alert) {
     try {
       Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
       if (optionalStrategy.isEmpty()) {
@@ -92,8 +43,7 @@ public class StrategyService {
         return;
       }
 
-
-      contractService.requestContract(alert.getSymbol())
+      contractService.requestContract(alert)
           .orTimeout(30, TimeUnit.SECONDS)
           .thenAccept(contractDetails -> {
 
@@ -145,12 +95,12 @@ public class StrategyService {
 
     StrategyEntity strategy = optionalStrategy.get();
     if (strategy.getMaxPositionAmount().compareTo(alert.getHigh()) < 0) {
-      log.error("Strategy: '{}'. MaxPositionAmount is less than price .", alert.getStrategy());
+      log.error("Strategy: '{}'. MaxPositionAmount'{}' is less than price .", alert.getStrategy(),
+          strategy.getMaxPositionAmount());
 
       return Optional.empty();
     }
 
     return optionalStrategy;
   }
-
 }

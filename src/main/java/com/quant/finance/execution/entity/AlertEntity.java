@@ -46,6 +46,8 @@ public class AlertEntity {
   private boolean isPeer;
   @Column(nullable = false, length = 200)
   private String strategy;
+  @Column(length = 20)
+  private String assetClass;
   @Column(length = 50)
   private String exchange;
   private Integer interval;
@@ -82,6 +84,7 @@ public class AlertEntity {
         .action(this.action == Action.BUY ? Action.SELL : Action.BUY)
         .peerSymbol(this.peerSymbol)
         .isPeer(true)
+        .assetClass(this.assetClass)
         .strategy(this.strategy)
         .exchange(this.exchange)
         .interval(this.interval)

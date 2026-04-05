@@ -10,6 +10,7 @@ import com.ib.client.Decimal;
 import com.ib.client.OrderCancel;
 import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
+import com.ib.client.Types;
 import com.ib.client.Types.Action;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.entity.AlertEntity;
@@ -35,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
   private final OrderRepository repository;
   private final NotificationService notificationService;
-  private final PositionServiceNew positionService;
+  private final PositionService positionService;
   @Lazy
   @Autowired
   private IBClient ibClient;
@@ -96,6 +97,7 @@ public class OrderService {
       if (strategy.getBuyOrderType() == OrderType.LMT) {
         order.setLimitPrice(alert.getClose().multiply(strategy.getBuyLimitCeiling()));
       }
+
       order.setQuantity(calculateQuantity(strategy, alert));
       order.setTakeProfitPrice(calculateTakeProfitPrice(strategy, alert));
       order.setStopLossPrice(calculateStopLossPrice(strategy, alert));
@@ -182,6 +184,8 @@ public class OrderService {
       if (status.equals(OrderStatus.Filled.name())) {
         positionService.syncronizePositions();
         notificationService.notify(message);
+
+        //todo Place TP and SL orders for crypto. Cancel opposite on execution
       }
 
       Optional<OrderEntity> order = repository.findByBrokerOrderId(orderId);

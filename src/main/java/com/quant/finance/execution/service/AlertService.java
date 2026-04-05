@@ -21,20 +21,20 @@ public class AlertService {
   private final StrategyService strategyService;
   private final NotificationService notificationService;
   private final ApplicationProperties properties;
-  private final AlertRoutingService routingService;
+  private final AlertRouter alertRouter;
 
   public AlertService(AlertRepository repository,
                       AlertMapper alertMapper,
                       NotificationService notificationService,
                       @Lazy StrategyService strategyService,
                       ApplicationProperties properties,
-                      AlertRoutingService routingService) {
+                      AlertRouter alertRouter) {
     this.repository = repository;
     this.alertMapper = alertMapper;
     this.notificationService = notificationService;
     this.strategyService = strategyService;
     this.properties = properties;
-    this.routingService = routingService;
+    this.alertRouter = alertRouter;
   }
 
   @Async
@@ -45,7 +45,7 @@ public class AlertService {
 
     try {
       log.info("Received alert: {}", tvAlertDto);
-      routingService.routeToPartner(tvAlertDto);
+      alertRouter.routeToPartner(tvAlertDto);
       notificationService.notify(tvAlertDto);
       alert = repository.save(alert);
     } catch (Exception e) {
@@ -61,7 +61,7 @@ public class AlertService {
 
     if (alert.getPeerSymbol() == null || alert.getPeerSymbol().isBlank()) {
       try {
-        strategyService.executeStrategyNew(alert);
+        strategyService.executeStrategy(alert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
@@ -75,9 +75,9 @@ public class AlertService {
     if (alert.getAction() == Types.Action.BUY) {
       try {
         AlertEntity peerAlert = alert.duplicateForPeerTickerProcessing();
-        strategyService.executeStrategyNew(peerAlert);
+        strategyService.executeStrategy(peerAlert);
         Thread.sleep(properties.getParams().getPairTickerThreadSleep());
-        strategyService.executeStrategyNew(alert);
+        strategyService.executeStrategy(alert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
@@ -86,10 +86,10 @@ public class AlertService {
       }
     } else {
       try {
-        strategyService.executeStrategyNew(alert);
+        strategyService.executeStrategy(alert);
         Thread.sleep(properties.getParams().getPairTickerThreadSleep());
         AlertEntity peerAlert = alert.duplicateForPeerTickerProcessing();
-        strategyService.executeStrategyNew(peerAlert);
+        strategyService.executeStrategy(peerAlert);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());

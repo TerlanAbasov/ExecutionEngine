@@ -3,18 +3,22 @@ package com.quant.finance.execution.service;
 import static com.ib.client.Util.DoubleMaxString;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.ib.client.Contract;
 import com.ib.client.Decimal;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.model.Position;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,13 +30,17 @@ public class PositionService {
   private final ApplicationProperties properties;
   private final PnlService pnlService;
 
+  SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter
+      .serializeAllExcept("contractId", "securityType", "currency");
+
+  SimpleFilterProvider filters = new SimpleFilterProvider()
+      .addFilter("positionFilter", filter);
+
   @Lazy
   @Autowired
   private IBClient ibClient;
 
   private final Map<String, Position> positionMap = new ConcurrentHashMap<>();
-  private final Map<String, CompletableFuture<Position>> positionFutureMap =
-      new ConcurrentHashMap<>();
 
   /**
    * called before trading to check if position of symbol existing or not.
@@ -40,24 +48,17 @@ public class PositionService {
    * @param symbol
    * @return
    */
-  public CompletableFuture<Position> getSymbolPosition(String symbol) {
-    CompletableFuture<Position> future = new CompletableFuture<>();
-    synchronized (positionFutureMap) {
-      positionFutureMap.putIfAbsent(symbol, future);
-    }
-    pnlService.clearPnlCollections();
-    ibClient.requestPositions();
-
-    return future;
+  public synchronized Position getPositionBySymbol(String symbol) {
+    return positionMap.get(properties.getAccount().getId() + ":" + symbol);
   }
 
   /**
-   * called by api or webhook to get update and notification about positions
+   * called by api or webhook to syncronize positions
    */
-  public void requestPositions() {
-    synchronized (this) {
-      //positionMap.clear();
-      pnlService.clearPnlCollections();
+
+  public void syncronizePositions() {
+    synchronized (positionMap) {
+      positionMap.clear();
     }
     ibClient.requestPositions();
   }
@@ -71,19 +72,12 @@ public class PositionService {
 
       Position position = Position.buildPosition(contract, quantity, avgCost);
 
-      synchronized (positionFutureMap) {
-        CompletableFuture<Position> future = positionFutureMap.get(contract.symbol());
-        if (future != null && !future.isDone()) {
-          log.warn("Completing future");
-          future.complete(position);
-          positionFutureMap.remove(contract.symbol());
+      if (position.getQuantity() != 0) {
+        synchronized (positionMap) {
+          positionMap.put(account + ":" + contract.symbol(), position);
         }
-
-        if (position.getQuantity() != 0) {
-          pnlService.requestPnLForPosition(position);
-        }
+        pnlService.requestPnLForPosition(position);
       }
-
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       notificationService.notify(e.getMessage());
@@ -92,22 +86,35 @@ public class PositionService {
 
   public void onPositionEnd() {
     log.info("POSITION END");
-    pnlService.notifyAboutPositionsAndPnL();
+  }
 
-    synchronized (positionFutureMap) {
-      positionFutureMap.forEach((symbol, future) -> {
-        if (!future.isDone()) {
-          log.warn("No position found for {}, completing future", symbol);
+  @Async
+  public void sendPositions() {
+    try {
+      List<Position> allPositions = new ArrayList<>(positionMap.values());
 
-          Position position = Position.builder()
-              .symbol(symbol)
-              .quantity(0d)
-              .build();
+      String header = String.format("Positions of %s\n", properties.getAccount().getId());
 
-          future.complete(position);
-        }
-      });
-      positionFutureMap.clear();
+      if (allPositions.isEmpty()) {
+        String message = "No position";
+        log.info("{}", message);
+        notificationService.notify(message);
+
+        return;
+      }
+
+      for (int i = 0; i < allPositions.size(); i += 20) {
+        List<Position> chunk = allPositions.subList(i, Math.min(i + 20, allPositions.size()));
+        String positionsChunk =
+            objectMapper.writer(filters).withDefaultPrettyPrinter().writeValueAsString(chunk);
+
+        String message = (i == 0 ? header : "") + positionsChunk;
+        log.info("{}", message);
+        notificationService.notify(message);
+      }
+    } catch (Exception e) {
+      log.error("Failed to serialize positions", e);
+      notificationService.notify(e.getMessage());
     }
   }
 }

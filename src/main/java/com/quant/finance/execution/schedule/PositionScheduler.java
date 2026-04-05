@@ -16,8 +16,10 @@ public class PositionScheduler {
   @Scheduled(fixedDelayString = "${application.params.positionSyncronizerDelay}")
   public void syncronizePositions() {
     try {
-      log.info("Syncronizing positions");
-      ibClient.requestPositions();
+      if (ibClient.isConnected()) {
+        log.info("Syncronizing positions");
+        ibClient.requestPositions();
+      }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }

@@ -1,5 +1,7 @@
 package com.quant.finance.execution.service;
 
+import com.quant.finance.execution.command.CommandDispatcher;
+import com.quant.finance.execution.command.CommandParser;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.dto.TradeCommandDto;
 import jakarta.annotation.PostConstruct;
@@ -19,7 +21,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 public class TelegramBotHandler
     implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
   private final ApplicationProperties properties;
-  private final CommandParserService parserService;
+  private final CommandParser commandParser;
   private final CommandDispatcher commandDispatcher;
   private final TelegramClient telegramClient;
 
@@ -54,7 +56,7 @@ public class TelegramBotHandler
     String text = update.getMessage().getText();
     log.info("\uD83D\uDCE9 '{}' command received from chatId={}", text, chatId);
 
-    TradeCommandDto cmd = parserService.parse(text, chatId);
+    TradeCommandDto cmd = commandParser.parse(text, chatId);
     String response = commandDispatcher.dispatch(cmd);
 
     log.info(response);

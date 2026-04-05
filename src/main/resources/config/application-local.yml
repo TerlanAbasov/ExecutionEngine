@@ -40,7 +40,7 @@ application:
         gateway:
             host: 128.140.74.222
             port: 7497
-            id: 3
+            id: 2
     contract:
         count: 1
     account:
@@ -50,8 +50,8 @@ application:
         contractFutureTimeout: 60
         alertProcessorFixedDelay: "1000"
         twsConnectionCheckerFixedDelay: "600000"
-        positionSyncronizerDelay: "60000"
-        startUpDelay: 10000
+        positionSyncronizerDelay: "600000"
+        startUpDelay: 5000
 
 management:
     endpoints:

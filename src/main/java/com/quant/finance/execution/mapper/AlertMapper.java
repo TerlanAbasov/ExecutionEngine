@@ -24,6 +24,7 @@ public interface AlertMapper {
   @Mapping(source = "ticker", target = "symbol")
   @Mapping(source = "tvAlertDto", target = "action", qualifiedByName = "determineAction")
   @Mapping(source = "peerTicker", target = "peerSymbol")
+  @Mapping(source = "assetClass", target = "assetClass")
   @Mapping(source = "strategy", target = "strategy")
   @Mapping(source = "exchange", target = "exchange")
   @Mapping(source = "interval", target = "interval", qualifiedByName = "parseInterval")
@@ -55,7 +56,7 @@ public interface AlertMapper {
     throw new IllegalArgumentException("Unknown action type");
   }
 
-  @Named("parseInterval")
+/*  @Named("parseInterval")
   default Integer parseInterval(String interval) {
     try {
       return Integer.parseInt(interval);
@@ -63,6 +64,59 @@ public interface AlertMapper {
       log.error(e.getMessage(), e);
       return null;
     }
+  }*/
+
+  @Named("parseInterval")
+  default Integer parseInterval(String interval) {
+    if (interval == null || interval.isBlank()) {
+      log.error("Interval is null or empty");
+      return null;
+    }
+
+    try {
+      String normalized = interval.trim().toUpperCase();
+
+      // 🔹 Seconds (e.g. 5S)
+      if (normalized.endsWith("S")) {
+        int value = Integer.parseInt(normalized.substring(0, normalized.length() - 1));
+        return validateInterval(value);
+      }
+
+      // 🔹 Daily / Weekly / Monthly
+      switch (normalized) {
+        case "D":
+          return 86400;
+        case "W":
+          return 604800;
+        case "M":
+          return 2592000; // 30 days approximation
+      }
+
+      // 🔹 Minutes (default numeric)
+      if (normalized.matches("\\d+")) {
+        int minutes = Integer.parseInt(normalized);
+        return validateInterval(minutes * 60);
+      }
+
+      throw new IllegalArgumentException("Unsupported interval: " + interval);
+
+    } catch (Exception e) {
+      log.error("Failed to parse interval: {}", interval, e);
+      return null;
+    }
+  }
+
+  default int validateInterval(int seconds) {
+    if (seconds <= 0) {
+      throw new IllegalArgumentException("Interval must be > 0");
+    }
+
+    // Optional: protect your engine from garbage / abuse
+    if (seconds > 2592000) { // 30 days
+      throw new IllegalArgumentException("Interval too large: " + seconds);
+    }
+
+    return seconds;
   }
 
   @Named("parseVolume")

@@ -5,6 +5,7 @@ import com.ib.client.ContractDetails;
 import com.ib.client.Types;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
+import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.util.EngineUtil;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -31,15 +32,16 @@ public class ContractService {
     this.properties = properties;
   }
 
-  public CompletableFuture<ContractDetails> requestContract(String symbol) {
+  public CompletableFuture<ContractDetails> requestContract(AlertEntity alert) {
 
     int requestId = EngineUtil.nextRequestId();
 
     CompletableFuture<ContractDetails> contractFuture = new CompletableFuture<>();
     contractMap.put(requestId, contractFuture);
 
-    Contract contract = buildContract(symbol);
+    Contract contract = buildContract(alert);
 
+    log.error(contract.toString());
     ibClient.getEClientSocket().reqContractDetails(requestId, contract);
 
     return contractFuture.orTimeout(properties.getParams().getContractFutureTimeout(),
@@ -67,12 +69,59 @@ public class ContractService {
     contractMap.remove(requestId);
   }
 
-  private Contract buildContract(String symbol) {
+  private Contract buildContract(AlertEntity alert) {
     Contract contract = new Contract();
-    contract.symbol(symbol);
-    contract.secType(Types.SecType.STK);
-    contract.exchange("SMART");
+
+    String symbol = alert.getSymbol().toUpperCase();
+    Types.SecType secType = defineSecType(alert.getAssetClass());
+
+    contract.secType(secType);
+
+    switch (secType) {
+      case STK -> {
+        contract.symbol(symbol);
+        contract.exchange("SMART");
+        contract.currency("USD");
+      }
+
+      case CRYPTO -> {
+        String base = extractBase(symbol);
+        String quote = extractQuote(symbol);
+
+        contract.symbol(base);
+        contract.exchange("PAXOS"); // REQUIRED for crypto
+        contract.currency(quote);
+      }
+
+      default -> {
+        contract.symbol(symbol);
+        contract.exchange("SMART");
+        contract.currency("USD");
+      }
+    }
 
     return contract;
+  }
+
+  private Types.SecType defineSecType(String assetClass) {
+    if (assetClass == null) {
+      return Types.SecType.STK;
+    }
+
+    return assetClass.equals("CRYPTO") ? Types.SecType.CRYPTO : Types.SecType.STK;
+  }
+
+  private String extractBase(String symbol) {
+    if (symbol.endsWith("USD")) {
+      return symbol.substring(0, symbol.length() - 3);
+    }
+    throw new IllegalArgumentException("Unsupported crypto symbol: " + symbol);
+  }
+
+  private String extractQuote(String symbol) {
+    if (symbol.endsWith("USD")) {
+      return "USD";
+    }
+    throw new IllegalArgumentException("Unsupported crypto symbol: " + symbol);
   }
 }

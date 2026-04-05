@@ -1,4 +1,4 @@
-package com.quant.finance.execution.service;
+package com.quant.finance.execution.command;
 
 import com.ib.client.OrderType;
 import com.ib.client.Types;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class CommandParserService {
+public class CommandParser {
 
   public TradeCommandDto parse(String text, Long chatId) {
     if (text == null || text.isBlank()) {
