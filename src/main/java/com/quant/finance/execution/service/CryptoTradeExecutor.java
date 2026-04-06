@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +48,7 @@ public class CryptoTradeExecutor implements TradeExecutor {
     try {
       OrderEntity parentOrderEntity =
           orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingPosition);
-      Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
+      Order parentOrder = createParentOrder(strategy, parentOrderEntity, contractDetails);
 
       ibClient.placeOrder(contractDetails.contract(), parentOrder);
       alertService.updateState(alert, AlertState.PROCESSED);
@@ -58,11 +59,12 @@ public class CryptoTradeExecutor implements TradeExecutor {
     }
   }
 
-  public Order createParentOrder(OrderEntity orderEntity, ContractDetails contractDetails) {
+  public Order createParentOrder(StrategyEntity strategy, OrderEntity orderEntity,
+                                 ContractDetails contractDetails) {
     Order order = baseOrder(orderEntity, contractDetails.contract());
     order.tif(Types.TimeInForce.IOC);
     order.totalQuantity(Decimal.ZERO);
-    order.cashQty(orderEntity.getQuantity()); // or calculated USD amount
+    order.cashQty(strategy.getMaxPositionAmount().doubleValue()); // or calculated USD amount
     setLimitOrAuxPrice(order, orderEntity, contractDetails);
 
     //if (orderEntity.getOrderType() == OrderType.MKT) {
@@ -96,13 +98,17 @@ public class CryptoTradeExecutor implements TradeExecutor {
     return order;
   }
 
+  @Async
+  public void onOrderFilled(OrderEntity orderEntity) {
+
+  }
+
   //todo add TP and STP_LMT(not STP) orders after parent FILLED
 
   /**
    * if (orderType == STP_LMT) {
    * order.auxPrice(stopPrice);
-   * <p>
-   * // crypto üçün tighter spread
+   * crypto üçün tighter spread
    * order.lmtPrice(stopPrice - slippageBuffer);
    * }
    **/

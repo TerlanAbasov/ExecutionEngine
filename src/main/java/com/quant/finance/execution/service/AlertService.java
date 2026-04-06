@@ -51,6 +51,7 @@ public class AlertService {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       updateStateAndDescription(alert, AlertState.FAILED, e.getMessage());
+      notificationService.notify(e.getMessage());
     }
   }
 

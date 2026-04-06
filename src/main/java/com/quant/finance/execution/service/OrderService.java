@@ -10,7 +10,6 @@ import com.ib.client.Decimal;
 import com.ib.client.OrderCancel;
 import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
-import com.ib.client.Types;
 import com.ib.client.Types.Action;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.entity.AlertEntity;
@@ -40,6 +39,9 @@ public class OrderService {
   @Lazy
   @Autowired
   private IBClient ibClient;
+  @Lazy
+  @Autowired
+  private CryptoTradeExecutor cryptoTradeExecutor;
 
   @Transactional
   public OrderEntity save(OrderEntity order) {
@@ -184,16 +186,17 @@ public class OrderService {
       if (status.equals(OrderStatus.Filled.name())) {
         positionService.syncronizePositions();
         notificationService.notify(message);
-
         //todo Place TP and SL orders for crypto. Cancel opposite on execution
       }
 
       Optional<OrderEntity> order = repository.findByBrokerOrderId(orderId);
 
       if (order.isPresent()) {
-        order.get().setStatus(OrderStatus.get(status));
-        setDateTimes(order.get(), status);
-        repository.save(order.get());
+        OrderEntity orderEntity = order.get();
+        orderEntity.setStatus(OrderStatus.get(status));
+        setDateTimes(orderEntity, status);
+        repository.save(orderEntity);
+        cryptoTradeExecutor.onOrderFilled(orderEntity);
       } else {
         String errorMessage = String.format("Order not found with id=%d", orderId);
         log.error(errorMessage);
