@@ -8,6 +8,7 @@ import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.util.EngineUtil;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -77,27 +78,17 @@ public class ContractService {
 
     contract.secType(secType);
 
-    switch (secType) {
-      case STK -> {
-        contract.symbol(symbol);
-        contract.exchange("SMART");
-        contract.currency("USD");
-      }
+    if (Objects.requireNonNull(secType) == Types.SecType.CRYPTO) {
+      String base = EngineUtil.extractCryptoBaseSymbol(symbol);
+      String quote = EngineUtil.extractCryptoQuote(symbol);
 
-      case CRYPTO -> {
-        String base = extractBase(symbol);
-        String quote = extractQuote(symbol);
-
-        contract.symbol(base);
-        contract.exchange("PAXOS"); // REQUIRED for crypto
-        contract.currency(quote);
-      }
-
-      default -> {
-        contract.symbol(symbol);
-        contract.exchange("SMART");
-        contract.currency("USD");
-      }
+      contract.symbol(base);
+      contract.exchange("PAXOS"); // REQUIRED for crypto
+      contract.currency(quote);
+    } else {
+      contract.symbol(symbol);
+      contract.exchange("SMART");
+      contract.currency("USD");
     }
 
     return contract;
@@ -109,19 +100,5 @@ public class ContractService {
     }
 
     return assetClass.equals("CRYPTO") ? Types.SecType.CRYPTO : Types.SecType.STK;
-  }
-
-  private String extractBase(String symbol) {
-    if (symbol.endsWith("USD")) {
-      return symbol.substring(0, symbol.length() - 3);
-    }
-    throw new IllegalArgumentException("Unsupported crypto symbol: " + symbol);
-  }
-
-  private String extractQuote(String symbol) {
-    if (symbol.endsWith("USD")) {
-      return "USD";
-    }
-    throw new IllegalArgumentException("Unsupported crypto symbol: " + symbol);
   }
 }

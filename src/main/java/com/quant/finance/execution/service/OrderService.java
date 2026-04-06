@@ -86,7 +86,7 @@ public class OrderService {
     OrderEntity order = OrderEntity.builder()
         .brokerOrderId(IBClient.getNextOrderId())
         .strategy(strategy)
-        .symbol(alert.getSymbol())
+        .symbol(contractDetails.contract().symbol())
         .contractId(contractDetails.contract().conid())
         .action(alert.getAction())
         .status(ApiPending)

@@ -6,6 +6,7 @@ import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.enums.AlertState;
 import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.StrategyRepository;
+import com.quant.finance.execution.util.EngineUtil;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +33,14 @@ public class StrategyService {
         return;
       }
 
-      Position position = positionService.getPositionBySymbol(alert.getSymbol());
+      String symbol = alert.getSymbol();
+      if (alert.getAssetClass().equals("CRYPTO")) {
+        symbol = EngineUtil.extractCryptoBaseSymbol(alert.getSymbol());
+      }
 
-      log.info("Position validation. alertSymbol={}, existingPosition={}",
-          alert.getSymbol(), position);
+      Position position = positionService.getPositionBySymbol(symbol);
+
+      log.info("Position validation. alertSymbol={}, existingPosition={}", symbol, position);
 
       if (!checkIfQuantityExecutable(alert, position)) {
         alertService.updateStateAndDescription(alert, AlertState.PROCESSED,
@@ -56,7 +61,8 @@ public class StrategyService {
             notificationService.notify("Contract request failed: " + ex.getMessage());
             return null;
           });
-    } catch (Exception e) {
+    } catch (
+        Exception e) {
       log.error("Failed to request positions", e);
       notificationService.notify("Failed to request positions: " + e.getMessage());
       return;

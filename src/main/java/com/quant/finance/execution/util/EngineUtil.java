@@ -28,4 +28,18 @@ public class EngineUtil {
     double tick = price >= 1 ? 0.01 : 0.0001;
     return Math.round(price / tick) * tick;
   }
+
+  public static String extractCryptoBaseSymbol(String symbol) {
+    if (symbol.endsWith("USD")) {
+      return symbol.substring(0, symbol.length() - 3);
+    }
+    throw new IllegalArgumentException("Unsupported crypto symbol: " + symbol);
+  }
+
+  public static String extractCryptoQuote(String symbol) {
+    if (symbol.endsWith("USD")) {
+      return "USD";
+    }
+    throw new IllegalArgumentException("Unsupported crypto symbol: " + symbol);
+  }
 }
