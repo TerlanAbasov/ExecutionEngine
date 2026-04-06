@@ -61,8 +61,7 @@ public class StrategyService {
             notificationService.notify("Contract request failed: " + ex.getMessage());
             return null;
           });
-    } catch (
-        Exception e) {
+    } catch (Exception e) {
       log.error("Failed to request positions", e);
       notificationService.notify("Failed to request positions: " + e.getMessage());
       return;
