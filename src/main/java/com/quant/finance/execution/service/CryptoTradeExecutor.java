@@ -48,7 +48,8 @@ public class CryptoTradeExecutor implements TradeExecutor {
     try {
       OrderEntity parentOrderEntity =
           orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingPosition);
-      Order parentOrder = createParentOrder(strategy, parentOrderEntity, contractDetails);
+      Order parentOrder =
+          createParentOrder(alert, strategy, parentOrderEntity, contractDetails, existingPosition);
 
       ibClient.placeOrder(contractDetails.contract(), parentOrder);
       alertService.updateState(alert, AlertState.PROCESSED);
@@ -59,13 +60,20 @@ public class CryptoTradeExecutor implements TradeExecutor {
     }
   }
 
-  public Order createParentOrder(StrategyEntity strategy, OrderEntity orderEntity,
-                                 ContractDetails contractDetails) {
+  public Order createParentOrder(AlertEntity alert, StrategyEntity strategy,
+                                 OrderEntity orderEntity,
+                                 ContractDetails contractDetails, Position existingPosition) {
     Order order = baseOrder(orderEntity, contractDetails.contract());
     order.tif(Types.TimeInForce.IOC);
-    order.totalQuantity(Decimal.ZERO);
-    order.cashQty(strategy.getMaxPositionAmount().doubleValue()); // or calculated USD amount
     setLimitOrAuxPrice(order, orderEntity, contractDetails);
+
+    if (alert.getAction() == Types.Action.BUY) {
+      order.totalQuantity(Decimal.ZERO);
+      order.cashQty(strategy.getMaxPositionAmount().doubleValue()); // or calculated USD amount
+    } else if (alert.getAction() == Types.Action.SELL) {
+      order.totalQuantity(Decimal.get(existingPosition.getQuantity()));
+      order.cashQty(0);
+    }
 
     //if (orderEntity.getOrderType() == OrderType.MKT) {
     //  order.tif(Types.TimeInForce.IOC);
