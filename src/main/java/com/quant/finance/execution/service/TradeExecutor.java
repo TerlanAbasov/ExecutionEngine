@@ -25,7 +25,6 @@ public interface TradeExecutor {
 
   void closeAllPositions(TradeCommandDto commandDto);
 
-
   default void setAuxPrice(OrderEntity orderEntity, ContractDetails contractDetails, Order order) {
     if (order.orderType() == OrderType.LMT) {
       order.auxPrice(

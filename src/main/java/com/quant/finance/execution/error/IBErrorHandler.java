@@ -1,6 +1,7 @@
 package com.quant.finance.execution.error;
 
 import com.quant.finance.execution.client.IBClient;
+import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.service.NotificationService;
 import com.quant.finance.execution.service.OrderService;
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +26,14 @@ public class IBErrorHandler {
   private IBClient ibClient;
   private final OrderService orderService;
   private final NotificationService notificationService;
+  private final ApplicationProperties properties;
 
   private final AtomicBoolean connectionHealthy = new AtomicBoolean(false);
   private final AtomicBoolean reconnectInProgress = new AtomicBoolean(false);
   private final AtomicLong lastNotificationTime = new AtomicLong(0);
-  private static final long NOTIFICATION_COOLDOWN_MS = 60_000;
 
   private static final Set<Integer> CONNECTION_OK_CODES = Set.of(2104, 2106, 2158);
-  private static final Set<Integer> INFO_CODES = Set.of(2107, 2108, 10186);
+  private static final Set<Integer> INFO_CODES = Set.of(2103, 2107, 2108, 10186);
   private static final Set<Integer> WARNING_CODES =
       Set.of(200, 201, 202, 321, 326, 399, 503, 504, 507, 1100, 1101, 1102, 2110, 10147);
 
@@ -94,7 +96,7 @@ public class IBErrorHandler {
       try {
         log.info("Attempting IB reconnect...");
         ibClient.disconnect();
-        Thread.sleep(600000);
+        Thread.sleep(properties.getParams().getReconnectTriggerDelay());
         ibClient.connect();
       } catch (Exception e) {
         log.error("Reconnect failed", e);
@@ -108,7 +110,7 @@ public class IBErrorHandler {
     long now = System.currentTimeMillis();
     long last = lastNotificationTime.get();
 
-    if (now - last > NOTIFICATION_COOLDOWN_MS) {
+    if (now - last > properties.getParams().getIbNotificationCooldown()) {
       if (lastNotificationTime.compareAndSet(last, now)) {
         notificationService.notify(message);
       }

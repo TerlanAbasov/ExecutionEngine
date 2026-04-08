@@ -52,6 +52,8 @@ application:
         twsConnectionCheckerFixedDelay: "600000"
         positionSyncronizerDelay: "600000"
         startUpDelay: 5000
+        ibNotificationCooldown: 600000
+        reconnectTriggerDelay: 600000
 
 management:
     endpoints:

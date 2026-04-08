@@ -53,6 +53,8 @@ public class ApplicationProperties {
     private Long pairTickerThreadSleep;
     private Integer contractFutureTimeout;
     private Long startUpDelay;
+    private Long ibNotificationCooldown;
+    private Long reconnectTriggerDelay;
   }
 
 }
