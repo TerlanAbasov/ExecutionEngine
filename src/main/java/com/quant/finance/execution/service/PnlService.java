@@ -68,7 +68,6 @@ public class PnlService {
           DoubleMaxString(dailyPnL), DoubleMaxString(unrealizedPnl),
           DoubleMaxString(realizedPnl), value);
 
-      position.setQuantity(positions.value().doubleValue());
       position.setDailyPnL(Position.scaleDoubleValue(DoubleMaxString(dailyPnL)));
       position.setUnrealizedPnl(Position.scaleDoubleValue(DoubleMaxString(unrealizedPnl)));
       position.setRealizedPnl(Position.scaleDoubleValue(DoubleMaxString(realizedPnl)));

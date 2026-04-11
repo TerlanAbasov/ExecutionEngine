@@ -71,12 +71,15 @@ public class PositionService {
           contract.currency(), quantity.toString(), DoubleMaxString(avgCost));
 
       Position position = Position.buildPosition(contract, quantity, avgCost);
+      String key = account + ":" + contract.symbol();
 
-      if (position.getQuantity() != 0) {
-        synchronized (positionMap) {
-          positionMap.put(account + ":" + contract.symbol(), position);
+      synchronized (positionMap) {
+        if (position.getQuantity() != 0) {
+          positionMap.put(key, position);
+          pnlService.requestPnLForPosition(position);
+        } else {
+          positionMap.remove(key);
         }
-        pnlService.requestPnLForPosition(position);
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);

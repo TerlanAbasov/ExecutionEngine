@@ -34,10 +34,12 @@ public class CommandParser {
           new TradeCommandDto(BotCommand.START_ACCOUNT_UPDATES, chatId, text);
       case "/stopaccountupdates" ->
           new TradeCommandDto(BotCommand.STOP_ACCOUNT_UPDATES, chatId, text);
-      case "/openorders" -> parseCommandText(BotCommand.OPEN_ORDERS, parts, chatId, text);
+      case "/openorders" -> new TradeCommandDto(BotCommand.OPEN_ORDERS, chatId, text);
       case "/cancelorder" -> parseCommandText(BotCommand.CANCEL_ORDER, parts, chatId, text);
-      case "/cancelopenorders" ->
-          parseCommandText(BotCommand.CANCEL_OPEN_ORDERS, parts, chatId, text);
+      case "/cancelopenorders" -> new TradeCommandDto(BotCommand.CANCEL_OPEN_ORDERS, chatId, text);
+      case "/restartengine" -> new TradeCommandDto(BotCommand.RESTART_ENGINE, chatId, text);
+      case "/stopengine" -> new TradeCommandDto(BotCommand.STOP_ENGINE, chatId, text);
+      case "/startengine" -> new TradeCommandDto(BotCommand.START_ENGINE, chatId, text);
       default -> unknown(text, chatId);
     };
   }

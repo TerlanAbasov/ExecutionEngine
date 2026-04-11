@@ -42,6 +42,18 @@ public class CommandDispatcher {
           iBClient.requestSinglePnl(Integer.parseInt(commandDto.getIdentifier()));
           yield "📊 PnL Single will be sent";
         }
+        case BUY -> {
+          tradeService.buy(commandDto);
+          yield "📊 Symbol will be bought";
+        }
+        case SELL -> {
+          tradeService.sell(commandDto);
+          yield "📊 Symbol will be sold";
+        }
+        case CLOSE_ALL -> {
+          tradeService.closeAllPositions(commandDto);
+          yield "📊 Positions will be closed";
+        }
         case START_ACCOUNT_SUMMARY -> {
           iBClient.requestAccountSummary();
           yield "📊 Account Summary will be sent";
@@ -57,18 +69,6 @@ public class CommandDispatcher {
         case STOP_ACCOUNT_UPDATES -> {
           iBClient.cancelAccountUpdates();
           yield "📊 Account Updates stopped";
-        }
-        case BUY -> {
-          tradeService.buy(commandDto);
-          yield "📊 Symbol will be bought";
-        }
-        case SELL -> {
-          tradeService.sell(commandDto);
-          yield "📊 Symbol will be sold";
-        }
-        case CLOSE_ALL -> {
-          tradeService.closeAllPositions(commandDto);
-          yield "📊 Positions will be closed";
         }
         case OPEN_ORDERS -> {
           iBClient.requestOpenOrders();

@@ -69,23 +69,21 @@ public class StrategyService {
   }
 
   private boolean checkIfQuantityExecutable(AlertEntity alert, Position position) {
-    if (Action.BUY.equals(alert.getAction()) && (position == null || position.getQuantity() <= 0)) {
-      return true;
-    } else if (Action.SELL.equals(alert.getAction()) && position != null &&
-        position.getQuantity() > 0) {
-      return true;
-    }
-
+    Action action = alert.getAction();
     double existingQuantity = position != null ? position.getQuantity() : 0d;
 
-    String message =
-        String.format(
-            "Quantity check is false. symbol=%s, peerSymbol=%s, action=%s, existingQuantity=%.2f",
-            alert.getSymbol(), alert.getPeerSymbol(), alert.getAction(), existingQuantity);
-    log.info(message);
-    notificationService.notify(message);
+    boolean executable = (Action.BUY.equals(action) && existingQuantity <= 0)
+        || (Action.SELL.equals(action) && existingQuantity > 0);
 
-    return false;
+    if (!executable) {
+      String message = String.format(
+          "Quantity check is false. symbol=%s, peerSymbol=%s, action=%s, existingQuantity=%.2f",
+          alert.getSymbol(), alert.getPeerSymbol(), action, existingQuantity);
+      log.info(message);
+      notificationService.notify(message);
+    }
+
+    return executable;
   }
 
   public Optional<StrategyEntity> checkStrategy(AlertEntity alert) {
