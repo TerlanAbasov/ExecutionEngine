@@ -22,6 +22,7 @@ public class CommandParser {
     return switch (cmd) {
       case "/positions" -> new TradeCommandDto(BotCommand.POSITIONS, chatId, text);
       case "/pnl" -> new TradeCommandDto(BotCommand.PNL, chatId, text);
+      case "/cancelpnl" -> new TradeCommandDto(BotCommand.CANCEL_PNL, chatId, text);
       case "/pnlsingle" -> parseCommandText(BotCommand.PNL_SINGLE, parts, chatId, text);
       case "/buy" -> parseCommandText(BotCommand.BUY, parts, chatId, text);
       case "/sell" -> parseCommandText(BotCommand.SELL, parts, chatId, text);
