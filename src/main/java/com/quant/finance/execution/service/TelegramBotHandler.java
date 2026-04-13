@@ -4,6 +4,7 @@ import com.quant.finance.execution.command.CommandDispatcher;
 import com.quant.finance.execution.command.CommandParser;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.dto.TradeCommandDto;
+import com.quant.finance.execution.enums.BotCommand;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,8 +58,12 @@ public class TelegramBotHandler
     log.info("\uD83D\uDCE9 '{}' command received from chatId={}", text, chatId);
 
     TradeCommandDto cmd = commandParser.parse(text, chatId);
-    String response = commandDispatcher.dispatch(cmd);
 
-    log.info(response);
+    if (cmd.getCommand() != BotCommand.UNKNOWN) {
+      String response = commandDispatcher.dispatch(cmd);
+      log.info(response);
+    } else {
+      log.error(cmd.toString());
+    }
   }
 }
