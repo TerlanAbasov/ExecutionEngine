@@ -161,12 +161,19 @@ public class IBClient {
     eClientSocket.cancelOrder(orderId, orderCancel);
   }
 
+  private static final AtomicInteger pnlRequestId = new AtomicInteger(0);
+
   public void requestPnl() {
-    int requestId = EngineUtil.nextRequestId();
+    pnlRequestId.set(EngineUtil.nextRequestId());
     String accountId = properties.getAccount().getId();
 
-    log.info("Requesting pnl. requestId={}", requestId);
-    eClientSocket.reqPnL(requestId, accountId, "");
+    log.info("Requesting pnl. requestId={}", pnlRequestId.get());
+    eClientSocket.reqPnL(pnlRequestId.get(), accountId, "");
+  }
+
+  public void cancelPnl() {
+    log.info("Cancelling pnl. requestId={}", pnlRequestId.get());
+    eClientSocket.cancelPnL(pnlRequestId.get());
   }
 
   public void requestSinglePnl(int requestId, String accountId, String modelCode, int conId) {

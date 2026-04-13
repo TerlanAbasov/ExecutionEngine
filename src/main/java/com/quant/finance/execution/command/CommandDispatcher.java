@@ -38,6 +38,10 @@ public class CommandDispatcher {
           iBClient.requestPnl();
           yield "📊 PnL will be sent";
         }
+        case CANCEL_PNL -> {
+          iBClient.cancelPnl();
+          yield "📊 PnL will be cancelled";
+        }
         case PNL_SINGLE -> {
           iBClient.requestSinglePnl(Integer.parseInt(commandDto.getIdentifier()));
           yield "📊 PnL Single will be sent";
