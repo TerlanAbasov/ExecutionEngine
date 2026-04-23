@@ -30,7 +30,6 @@ public class TradeService {
 
     TradeExecutor executor = factory.resolve(secType);
     executor.buy(commandDto);
-
   }
 
   public void sell(TradeCommandDto commandDto) {
