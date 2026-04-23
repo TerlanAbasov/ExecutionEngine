@@ -1,3 +1,6 @@
+- add close positions jobs for day trade strategy
+- stock did not go more than 1/2% within 2 hours and is in profit sell
+- if stock daily pnl near to tp amount in short period. modify tp amount to get more profit
 - optimiza reconnect logic
 - ORDER STATE VALIDATION before action
 - prevent duplicate trade risk. create symbol+action key map and check before trade for duplicate

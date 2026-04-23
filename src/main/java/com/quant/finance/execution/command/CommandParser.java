@@ -19,6 +19,8 @@ public class CommandParser {
     String[] parts = text.trim().split("\\s+");
     String cmd = parts[0].toLowerCase();
 
+    log.info("\uD83D\uDCE9 '{}' command  received", cmd);
+
     return switch (cmd) {
       case "/positions" -> new TradeCommandDto(BotCommand.POSITIONS, chatId, text);
       case "/pnl" -> new TradeCommandDto(BotCommand.PNL, chatId, text);
@@ -45,7 +47,6 @@ public class CommandParser {
     };
   }
 
-  // /buy BTCUSDT 0.01
   private TradeCommandDto parseCommandText(BotCommand cmd, String[] parts, Long chatId,
                                            String raw) {
     if (parts.length < 2) {
@@ -53,26 +54,29 @@ public class CommandParser {
     }
 
     TradeCommandDto dto = new TradeCommandDto();
+    dto.setCommand(cmd);
+    dto.setChatId(chatId);
+    dto.setRawText(raw);
 
-    if (parts.length == 2) {
+    if (parts.length >= 2) {
       dto.setIdentifier(parts[1]);
     }
-    if (parts.length == 3) {
+    if (parts.length >= 3) {
       dto.setStrategy(parts[2]);
     }
-    if (parts.length == 4) {
+    if (parts.length >= 4) {
       dto.setAction(Types.Action.valueOf(parts[3]));
     }
-    if (parts.length == 5) {
+    if (parts.length >= 5) {
       dto.setQuantity(Double.valueOf(parts[4]));
     }
-    if (parts.length == 6) {
+    if (parts.length >= 6) {
       dto.setOrderType(OrderType.valueOf(parts[5]));
     }
-    if (parts.length == 7) {
+    if (parts.length >= 7) {
       dto.setLimitPrice(Double.valueOf(parts[6]));
     }
-    if (parts.length == 8) {
+    if (parts.length >= 8) {
       dto.setTif(Types.TimeInForce.valueOf(parts[7]));
     }
 
@@ -83,12 +87,5 @@ public class CommandParser {
     return TradeCommandDto.builder()
         .command(BotCommand.UNKNOWN)
         .rawText(text).chatId(chatId).build();
-  }
-
-  public static Integer getValue(int[] arr, int index) {
-    if (arr.length >= arr.length) {
-      return null;
-    }
-    return arr[index];
   }
 }
