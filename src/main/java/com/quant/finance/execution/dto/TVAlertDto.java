@@ -16,10 +16,10 @@ public class TVAlertDto {
   private String time;
   private String timenow;
   private String volume;
+  private String open;
   private String close;
   private String high;
   private String low;
-  private String open;
   private String quote;
   private String base;
   private String plot0;

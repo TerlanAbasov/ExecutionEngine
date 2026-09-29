@@ -128,7 +128,6 @@ public class CryptoTradeExecutor implements TradeExecutor {
 
   @Override
   public void buy(TradeCommandDto commandDto) {
-
   }
 
   @Override

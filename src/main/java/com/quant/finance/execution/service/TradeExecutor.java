@@ -19,6 +19,11 @@ public interface TradeExecutor {
              ContractDetails contractDetails,
              Position existingPosition);
 
+  void trade(TradeCommandDto commandDto,
+             StrategyEntity strategy,
+             ContractDetails contractDetails,
+             Position existingPosition);
+
   void buy(TradeCommandDto commandDto);
 
   void sell(TradeCommandDto commandDto);

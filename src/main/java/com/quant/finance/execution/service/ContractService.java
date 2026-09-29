@@ -5,7 +5,6 @@ import com.ib.client.ContractDetails;
 import com.ib.client.Types;
 import com.quant.finance.execution.client.IBClient;
 import com.quant.finance.execution.config.ApplicationProperties;
-import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.util.EngineUtil;
 import java.util.Map;
 import java.util.Objects;
@@ -33,14 +32,14 @@ public class ContractService {
     this.properties = properties;
   }
 
-  public CompletableFuture<ContractDetails> requestContract(AlertEntity alert) {
+  public CompletableFuture<ContractDetails> requestContract(String symbol, String assetClass) {
 
     int requestId = EngineUtil.nextRequestId();
 
     CompletableFuture<ContractDetails> contractFuture = new CompletableFuture<>();
     contractMap.put(requestId, contractFuture);
 
-    Contract contract = buildContract(alert);
+    Contract contract = buildContract(symbol, defineSecType(assetClass));
 
     log.error(contract.toString());
     ibClient.getEClientSocket().reqContractDetails(requestId, contract);
@@ -70,12 +69,8 @@ public class ContractService {
     contractMap.remove(requestId);
   }
 
-  private Contract buildContract(AlertEntity alert) {
+  private Contract buildContract(String symbol, Types.SecType secType) {
     Contract contract = new Contract();
-
-    String symbol = alert.getSymbol().toUpperCase();
-    Types.SecType secType = defineSecType(alert.getAssetClass());
-
     contract.secType(secType);
 
     if (Objects.requireNonNull(secType) == Types.SecType.CRYPTO) {

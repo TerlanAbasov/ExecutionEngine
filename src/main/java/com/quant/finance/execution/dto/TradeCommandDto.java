@@ -4,6 +4,7 @@ import com.ib.client.OrderType;
 import com.ib.client.Types.Action;
 import com.ib.client.Types.TimeInForce;
 import com.quant.finance.execution.enums.BotCommand;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +27,10 @@ public class TradeCommandDto {
   private TimeInForce tif;
   private Long chatId;
   private String rawText;
+  private BigDecimal open;
+  private BigDecimal close;
+  private BigDecimal low;
+  private BigDecimal high;
 
   public TradeCommandDto(BotCommand command, Long chatId, String rawText) {
     this.command = command;

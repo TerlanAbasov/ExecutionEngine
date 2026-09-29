@@ -48,6 +48,8 @@ public class PositionService {
    * @param symbol
    * @return
    */
+
+
   public synchronized Position getPositionBySymbol(String symbol) {
     return positionMap.get(properties.getAccount().getId() + ":" + symbol);
   }

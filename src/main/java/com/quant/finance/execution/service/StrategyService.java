@@ -1,12 +1,14 @@
 package com.quant.finance.execution.service;
 
 import com.ib.client.Types.Action;
+import com.quant.finance.execution.dto.TradeCommandDto;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.enums.AlertState;
 import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.StrategyRepository;
 import com.quant.finance.execution.util.EngineUtil;
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,8 @@ public class StrategyService {
 
   public void executeStrategy(AlertEntity alert) {
     try {
-      Optional<StrategyEntity> optionalStrategy = checkStrategy(alert);
+      Optional<StrategyEntity> optionalStrategy =
+          checkStrategy(alert.getStrategy(), alert.getHigh());
       if (optionalStrategy.isEmpty()) {
         alertService.updateStateAndDescription(
             alert, AlertState.FAILED, "Strategy not found.");
@@ -48,7 +51,7 @@ public class StrategyService {
         return;
       }
 
-      contractService.requestContract(alert)
+      contractService.requestContract(alert.getSymbol(), alert.getAssetClass())
           .orTimeout(30, TimeUnit.SECONDS)
           .thenAccept(contractDetails -> {
 
@@ -58,6 +61,45 @@ public class StrategyService {
           })
           .exceptionally(ex -> {
             log.error("Contract request failed for {}", alert.getSymbol(), ex);
+            notificationService.notify("Contract request failed: " + ex.getMessage());
+            return null;
+          });
+    } catch (Exception e) {
+      log.error("Failed to request positions", e);
+      notificationService.notify("Failed to request positions: " + e.getMessage());
+      return;
+    }
+  }
+
+  public void executeStrategy(TradeCommandDto tradeCommandDto) {
+    try {
+      Optional<StrategyEntity> optionalStrategy =
+          checkStrategy(tradeCommandDto.getStrategy(), tradeCommandDto.getHigh());
+      if (optionalStrategy.isEmpty()) {
+        log.error("Strategy not found: {}", tradeCommandDto.getStrategy());
+        return;
+      }
+
+      String symbol = tradeCommandDto.getIdentifier();
+      Position position = positionService.getPositionBySymbol(symbol);
+
+      log.info("Position validation. alertSymbol={}, existingPosition={}", symbol, position);
+
+      if (!checkIfQuantityExecutable(tradeCommandDto, position)) {
+        log.error("Quantity check is false for {}", tradeCommandDto);
+        return;
+      }
+
+      contractService.requestContract(tradeCommandDto.getIdentifier(), "STK")
+          .orTimeout(30, TimeUnit.SECONDS)
+          .thenAccept(contractDetails -> {
+
+            tradeService.trade(tradeCommandDto, optionalStrategy.get(), contractDetails,
+                position);
+
+          })
+          .exceptionally(ex -> {
+            log.error("Contract request failed for {}", tradeCommandDto.getIdentifier(), ex);
             notificationService.notify("Contract request failed: " + ex.getMessage());
             return null;
           });
@@ -86,20 +128,38 @@ public class StrategyService {
     return executable;
   }
 
-  public Optional<StrategyEntity> checkStrategy(AlertEntity alert) {
-    Optional<StrategyEntity> optionalStrategy = repository.findByName(alert.getStrategy());
+  private boolean checkIfQuantityExecutable(TradeCommandDto tradeCommandDto, Position position) {
+    Action action = tradeCommandDto.getAction();
+    double existingQuantity = position != null ? position.getQuantity() : 0d;
+
+    boolean executable = (Action.BUY.equals(action) && existingQuantity <= 0)
+        || (Action.SELL.equals(action) && existingQuantity > 0);
+
+    if (!executable) {
+      String message = String.format(
+          "Quantity check is false. symbol=%s, action=%s, existingQuantity=%.2f",
+          tradeCommandDto.getIdentifier(), action, existingQuantity);
+      log.info(message);
+      notificationService.notify(message);
+    }
+
+    return executable;
+  }
+
+  public Optional<StrategyEntity> checkStrategy(String strategyName, BigDecimal barHighValue) {
+    Optional<StrategyEntity> optionalStrategy = repository.findByName(strategyName);
 
     if (optionalStrategy.isEmpty()) {
-      String mesage = String.format("Strategy: '%s' not found", alert.getStrategy());
+      String mesage = String.format("Strategy: '%s' not found", strategyName);
       log.error(mesage);
       notificationService.notify(mesage);
       return Optional.empty();
     }
 
-    StrategyEntity strategy = optionalStrategy.get();
-    if (strategy.getMaxPositionAmount().compareTo(alert.getHigh()) < 0) {
-      log.error("Strategy: '{}'. MaxPositionAmount'{}' is less than price .", alert.getStrategy(),
-          strategy.getMaxPositionAmount());
+    StrategyEntity strategyEntity = optionalStrategy.get();
+    if (strategyEntity.getMaxPositionAmount().compareTo(barHighValue) < 0) {
+      log.error("Strategy: '{}'. MaxPositionAmount'{}' is less than price .", strategyName,
+          strategyEntity.getMaxPositionAmount());
 
       return Optional.empty();
     }

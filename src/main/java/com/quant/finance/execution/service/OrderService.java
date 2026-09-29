@@ -12,6 +12,7 @@ import com.ib.client.OrderStatus;
 import com.ib.client.OrderType;
 import com.ib.client.Types.Action;
 import com.quant.finance.execution.client.IBClient;
+import com.quant.finance.execution.dto.TradeCommandDto;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.OrderEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
@@ -118,6 +119,45 @@ public class OrderService {
     return order;
   }
 
+  public OrderEntity buildAndSaveParentOrder(TradeCommandDto tradeCommandDto,
+                                             StrategyEntity strategy,
+                                             ContractDetails contractDetails,
+                                             Position existingPosition) {
+    OrderEntity order = OrderEntity.builder()
+        .brokerOrderId(IBClient.getNextOrderId())
+        .strategy(strategy)
+        .symbol(contractDetails.contract().symbol())
+        .contractId(contractDetails.contract().conid())
+        .action(tradeCommandDto.getAction())
+        .status(ApiPending)
+        .build();
+
+    order.setAlert(null);
+
+    if (tradeCommandDto.getAction() == Action.BUY) {
+      order.setOrderType(strategy.getBuyOrderType());
+      if (strategy.getBuyOrderType() == OrderType.LMT) {
+        order.setLimitPrice(tradeCommandDto.getClose().multiply(strategy.getBuyLimitCeiling()));
+      }
+
+      order.setQuantity(calculateQuantity(strategy, tradeCommandDto));
+      order.setTakeProfitPrice(calculateTakeProfitPrice(strategy, tradeCommandDto));
+      order.setStopLossPrice(calculateStopLossPrice(strategy, tradeCommandDto));
+    } else if (tradeCommandDto.getAction() == Action.SELL) {
+      order.setOrderType(strategy.getSellOrderType());
+      double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
+      order.setQuantity(existingQuantity);
+
+      if (strategy.getSellOrderType() == OrderType.LMT) {
+        order.setLimitPrice(tradeCommandDto.getOpen().multiply(strategy.getSellLimitFloor()));
+      }
+    }
+
+    order = repository.save(order);
+
+    return order;
+  }
+
   public OrderEntity buildAndSaveChildOrder(OrderEntity parentOrder, OrderType orderType,
                                             Action action) {
     OrderEntity orderEntity = OrderEntity.builder()
@@ -148,6 +188,13 @@ public class OrderService {
     return Math.floor(quantity);
   }
 
+  private double calculateQuantity(StrategyEntity strategy, TradeCommandDto tradeCommandDto) {
+    double quantity =
+        strategy.getMaxPositionAmount().doubleValue() / tradeCommandDto.getHigh().doubleValue();
+
+    return Math.floor(quantity);
+  }
+
   private BigDecimal calculateTakeProfitPrice(StrategyEntity strategy,
                                               AlertEntity alert) {
 
@@ -161,6 +208,19 @@ public class OrderService {
     return limitPrice;
   }
 
+  private BigDecimal calculateTakeProfitPrice(StrategyEntity strategy,
+                                              TradeCommandDto commandDto) {
+
+    BigDecimal percentageValue =
+        (commandDto.getHigh().multiply(BigDecimal.valueOf(strategy.getTakeProfitPercentage())))
+            .divide(BigDecimal.valueOf(100));
+
+    BigDecimal limitPrice = commandDto.getHigh().add(percentageValue);
+
+    //todo optimize with ATR
+    return limitPrice;
+  }
+
   private BigDecimal calculateStopLossPrice(StrategyEntity strategy,
                                             AlertEntity alert) {
     BigDecimal percentageValue =
@@ -168,6 +228,18 @@ public class OrderService {
             .divide(BigDecimal.valueOf(100));
 
     BigDecimal stopPrice = alert.getLow().subtract(percentageValue);
+
+    //todo optimize with ATR
+    return stopPrice;
+  }
+
+  private BigDecimal calculateStopLossPrice(StrategyEntity strategy,
+                                            TradeCommandDto commandDto) {
+    BigDecimal percentageValue =
+        (commandDto.getLow().multiply(BigDecimal.valueOf(strategy.getStopLossPercentage())))
+            .divide(BigDecimal.valueOf(100));
+
+    BigDecimal stopPrice = commandDto.getLow().subtract(percentageValue);
 
     //todo optimize with ATR
     return stopPrice;

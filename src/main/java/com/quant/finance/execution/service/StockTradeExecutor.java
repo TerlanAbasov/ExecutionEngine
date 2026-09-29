@@ -15,6 +15,7 @@ import com.quant.finance.execution.enums.AlertState;
 import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.OrderRepository;
 import com.quant.finance.execution.util.EngineUtil;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ public class StockTradeExecutor implements TradeExecutor {
   private final NotificationService notificationService;
   private final EWrapperImpl eWrapper;
   private final AlertService alertService;
+  private final StrategyService strategyService;
   @Lazy
   @Autowired
   private IBClient ibClient;
@@ -62,6 +64,47 @@ public class StockTradeExecutor implements TradeExecutor {
       notificationService.notify(String.format("TradeService.trade(). %s", e.getMessage()));
       alertService.updateStateAndDescription(alert, AlertState.PROCESSED, e.getMessage());
     }
+  }
+
+  @Override
+  @Transactional
+  public void trade(TradeCommandDto tradeCommandDto,
+                    StrategyEntity strategy,
+                    ContractDetails contractDetails,
+                    Position existingPosition) {
+
+  }
+
+  @Override
+  public void buy(TradeCommandDto commandDto) {
+    Optional<StrategyEntity> optionalStrategy =
+        strategyService.checkStrategy(commandDto.getStrategy(), commandDto.getHigh());
+    if (optionalStrategy.isEmpty()) {
+      log.error("Strategy not found: {}", commandDto.getStrategy());
+      return;
+    }
+
+    OrderEntity parentOrderEntity =
+        orderService.buildAndSaveParentOrder(commandDto, optionalStrategy.get(), contractDetails,
+            existingPosition);
+    Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
+
+/*    try {
+      OrderEntity parentOrderEntity =
+          orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingPosition);
+      Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
+      ibClient.placeOrder(contractDetails.contract(), parentOrder);
+
+      if (parentOrder.action() == Types.Action.BUY) {
+        placeBacketOrders(contractDetails, parentOrderEntity, parentOrder);
+      }
+
+      alertService.updateState(alert, AlertState.PROCESSED);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      notificationService.notify(String.format("TradeService.trade(). %s", e.getMessage()));
+      alertService.updateStateAndDescription(alert, AlertState.PROCESSED, e.getMessage());
+    }*/
   }
 
   private void placeBacketOrders(ContractDetails contractDetails, OrderEntity parentOrderEntity,
@@ -137,12 +180,7 @@ public class StockTradeExecutor implements TradeExecutor {
 
   @Override
   public void sell(TradeCommandDto commandDto) {
-
-  }
-
-  @Override
-  public void buy(TradeCommandDto commandDto) {
-
+    log.info("StockTradeExecutor.sell()");
   }
 
   @Override

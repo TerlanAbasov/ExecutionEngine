@@ -1,7 +1,7 @@
 package com.quant.finance.execution.controller;
 
-import com.quant.finance.execution.dto.TradeCommandDto;
 import com.quant.finance.execution.command.CommandDispatcher;
+import com.quant.finance.execution.dto.TradeCommandDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/trades")
 @RequiredArgsConstructor
-public class  TradeController {
+public class TradeController {
 
   private final CommandDispatcher commandDispatcher;
 

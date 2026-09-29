@@ -24,6 +24,8 @@ public class CommandDispatcher {
   private final PositionService positionService;
 
   public String dispatch(TradeCommandDto commandDto) {
+    log.info("TradeCommand received: {}", commandDto.toString());
+
     try {
       return switch (commandDto.getCommand()) {
         case POSITIONS -> {

@@ -1,3 +1,5 @@
+- check before buy/sell if there is presubmitted order or not
+- if alert comes on after market create limit order
 - add close positions jobs for day trade strategy
 - stock did not go more than 1/2% within 2 hours and is in profit sell
 - if stock daily pnl near to tp amount in short period. modify tp amount to get more profit
