@@ -15,7 +15,6 @@ import com.quant.finance.execution.enums.AlertState;
 import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.OrderRepository;
 import com.quant.finance.execution.util.EngineUtil;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,18 +76,6 @@ public class StockTradeExecutor implements TradeExecutor {
 
   @Override
   public void buy(TradeCommandDto commandDto) {
-    Optional<StrategyEntity> optionalStrategy =
-        strategyService.checkStrategy(commandDto.getStrategy(), commandDto.getHigh());
-    if (optionalStrategy.isEmpty()) {
-      log.error("Strategy not found: {}", commandDto.getStrategy());
-      return;
-    }
-
-    OrderEntity parentOrderEntity =
-        orderService.buildAndSaveParentOrder(commandDto, optionalStrategy.get(), contractDetails,
-            existingPosition);
-    Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
-
 /*    try {
       OrderEntity parentOrderEntity =
           orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingPosition);
