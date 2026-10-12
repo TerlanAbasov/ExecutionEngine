@@ -71,14 +71,10 @@ public class StockTradeExecutor implements TradeExecutor {
                     StrategyEntity strategy,
                     ContractDetails contractDetails,
                     Position existingPosition) {
-
-  }
-
-  @Override
-  public void buy(TradeCommandDto commandDto) {
-/*    try {
+    try {
       OrderEntity parentOrderEntity =
-          orderService.buildAndSaveParentOrder(alert, strategy, contractDetails, existingPosition);
+          orderService.buildAndSaveParentOrder(tradeCommandDto, strategy, contractDetails,
+              existingPosition);
       Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
       ibClient.placeOrder(contractDetails.contract(), parentOrder);
 
@@ -86,12 +82,16 @@ public class StockTradeExecutor implements TradeExecutor {
         placeBacketOrders(contractDetails, parentOrderEntity, parentOrder);
       }
 
-      alertService.updateState(alert, AlertState.PROCESSED);
+      log.info("Processed trade command: {}", tradeCommandDto);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       notificationService.notify(String.format("TradeService.trade(). %s", e.getMessage()));
-      alertService.updateStateAndDescription(alert, AlertState.PROCESSED, e.getMessage());
-    }*/
+      log.info("Error while processing trade command: {}", tradeCommandDto);
+    }
+  }
+
+  @Override
+  public void buy(TradeCommandDto commandDto) {
   }
 
   private void placeBacketOrders(ContractDetails contractDetails, OrderEntity parentOrderEntity,

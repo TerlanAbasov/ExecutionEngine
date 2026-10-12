@@ -60,6 +60,12 @@ public class CryptoTradeExecutor implements TradeExecutor {
     }
   }
 
+  @Override
+  public void trade(TradeCommandDto commandDto, StrategyEntity strategy,
+                    ContractDetails contractDetails, Position existingPosition) {
+
+  }
+
   public Order createParentOrder(AlertEntity alert, StrategyEntity strategy,
                                  OrderEntity orderEntity,
                                  ContractDetails contractDetails, Position existingPosition) {

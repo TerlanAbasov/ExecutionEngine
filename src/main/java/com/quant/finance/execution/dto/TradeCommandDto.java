@@ -25,12 +25,12 @@ public class TradeCommandDto {
   private OrderType orderType;
   private Double limitPrice;
   private TimeInForce tif;
-  private Long chatId;
-  private String rawText;
   private BigDecimal open;
   private BigDecimal close;
   private BigDecimal low;
   private BigDecimal high;
+  private Long chatId;
+  private String rawText;
 
   public TradeCommandDto(BotCommand command, Long chatId, String rawText) {
     this.command = command;
