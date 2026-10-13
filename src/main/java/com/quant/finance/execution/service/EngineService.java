@@ -9,7 +9,7 @@ public class EngineService {
   public static void restartEngine() {
     try {
       ProcessBuilder pb = new ProcessBuilder(
-          "sudo", "systemctl", "restart", "engine"
+          "sudo", "systemctl", "restart", "execution-engine"
       );
 
       Process process = getProcess(pb);
@@ -17,7 +17,7 @@ public class EngineService {
       int exitCode = process.waitFor();
 
       if (exitCode == 0) {
-        System.out.println("✅ Engine restarted successfully");
+        System.out.println("✅ ExecutionEngine restarted successfully");
       } else {
         System.out.println("❌ Restart failed. Exit code: " + exitCode);
       }
@@ -38,7 +38,7 @@ public class EngineService {
       int exitCode = process.waitFor();
 
       if (exitCode == 0) {
-        log.info("✅ Engine stopped successfully");
+        log.info("✅ ExecutionEnginestopped successfully");
       } else {
         log.info("❌ Stop failed. Exit code: {}", exitCode);
       }
@@ -59,7 +59,7 @@ public class EngineService {
       int exitCode = process.waitFor();
 
       if (exitCode == 0) {
-        log.info("✅ Engine started successfully");
+        log.info("✅ ExecutionEnginestarted successfully");
       } else {
         log.info("❌ Start failed. Exit code: {}", exitCode);
       }

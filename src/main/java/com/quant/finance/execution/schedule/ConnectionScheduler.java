@@ -19,8 +19,8 @@ public class ConnectionScheduler {
     try {
       Thread.sleep(10000);
       if (!ibClient.isConnected()) {
-        log.error("Engine is not connected to TWS API.");
-        notificationService.notify("Engine is not connected to TWS API.");
+        log.error("ExecutionEngineis not connected to TWS API.");
+        notificationService.notify("ExecutionEngineis not connected to TWS API.");
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
