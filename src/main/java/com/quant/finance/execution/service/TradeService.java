@@ -6,6 +6,7 @@ import com.quant.finance.execution.dto.TradeCommandDto;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.model.Position;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -39,16 +40,16 @@ public class TradeService {
     executor.trade(tradeCommandDto, strategy, contractDetails, existingPosition);
   }
 
-  public void buy(TradeCommandDto commandDto) {
-    strategyService.executeStrategy(commandDto);
+  public Optional<String> buy(TradeCommandDto commandDto) {
+    return strategyService.executeStrategy(commandDto);
 /*    Types.SecType secType = Types.SecType.STK;
 
     TradeExecutor executor = factory.resolve(secType);
     executor.buy(commandDto)*/
   }
 
-  public void sell(TradeCommandDto commandDto) {
-    strategyService.executeStrategy(commandDto);
+  public Optional<String> sell(TradeCommandDto commandDto) {
+    return strategyService.executeStrategy(commandDto);
     /*Types.SecType secType = Types.SecType.STK;
 
     TradeExecutor executor = factory.resolve(secType);

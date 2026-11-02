@@ -8,6 +8,7 @@ import com.quant.finance.execution.service.NotificationService;
 import com.quant.finance.execution.service.OrderService;
 import com.quant.finance.execution.service.PositionService;
 import com.quant.finance.execution.service.TradeService;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,12 +50,12 @@ public class CommandDispatcher {
           yield "📊 PnL Single will be sent";
         }
         case BUY -> {
-          tradeService.buy(commandDto);
-          yield "📊 Symbol will be bought";
+          Optional<String> refusal = tradeService.buy(commandDto);
+          yield refusal.map(reason -> "❌ " + reason).orElse("📊 Symbol will be bought");
         }
         case SELL -> {
-          tradeService.sell(commandDto);
-          yield "📊 Symbol will be sold";
+          Optional<String> refusal = tradeService.sell(commandDto);
+          yield refusal.map(reason -> "❌ " + reason).orElse("📊 Symbol will be sold");
         }
         case CLOSE_ALL -> {
           tradeService.closeAllPositions(commandDto);

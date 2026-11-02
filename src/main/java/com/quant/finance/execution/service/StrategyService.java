@@ -8,6 +8,8 @@ import com.quant.finance.execution.enums.AlertState;
 import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.StrategyRepository;
 import com.quant.finance.execution.util.EngineUtil;
+import io.micrometer.context.ContextSnapshot;
+import io.micrometer.context.ContextSnapshotFactory;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +21,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class StrategyService {
+  /** IB answers contract requests on its own reader thread; this carries the caller's trace over to it. */
+  private static final ContextSnapshotFactory CONTEXT_SNAPSHOTS = ContextSnapshotFactory.builder().build();
+
   private final StrategyRepository repository;
   private final NotificationService notificationService;
   private final PositionService positionService;
@@ -51,17 +56,20 @@ public class StrategyService {
         return;
       }
 
+      ContextSnapshot trace = CONTEXT_SNAPSHOTS.captureAll();
       contractService.requestContract(alert.getSymbol(), alert.getAssetClass())
           .orTimeout(30, TimeUnit.SECONDS)
-          .thenAccept(contractDetails -> {
+          .thenAccept(trace.wrap(contractDetails -> {
 
             tradeService.trade(alert, optionalStrategy.get(), contractDetails,
                 position);
 
-          })
+          }))
           .exceptionally(ex -> {
-            log.error("Contract request failed for {}", alert.getSymbol(), ex);
-            notificationService.notify("Contract request failed: " + ex.getMessage());
+            try (ContextSnapshot.Scope scope = trace.setThreadLocals()) {
+              log.error("Contract request failed for {}", alert.getSymbol(), ex);
+              notificationService.notify("Contract request failed: " + ex.getMessage());
+            }
             return null;
           });
     } catch (Exception e) {
@@ -71,13 +79,19 @@ public class StrategyService {
     }
   }
 
-  public void executeStrategy(TradeCommandDto tradeCommandDto) {
+  /**
+   * Checks the command and requests its contract; the order itself is placed once IB answers.
+   *
+   * @return why the command was refused, or empty when it was accepted
+   */
+  public Optional<String> executeStrategy(TradeCommandDto tradeCommandDto) {
     try {
       Optional<StrategyEntity> optionalStrategy =
           checkStrategy(tradeCommandDto.getStrategy(), tradeCommandDto.getHigh());
       if (optionalStrategy.isEmpty()) {
         log.error("Strategy not found: {}", tradeCommandDto.getStrategy());
-        return;
+        return Optional.of("Strategy '" + tradeCommandDto.getStrategy()
+            + "' was not found or its max position amount is below the price");
       }
 
       String symbol = tradeCommandDto.getIdentifier();
@@ -87,26 +101,31 @@ public class StrategyService {
 
       if (!checkIfQuantityExecutable(tradeCommandDto, position)) {
         log.error("Quantity check is false for {}", tradeCommandDto);
-        return;
+        return Optional.of("Quantity check failed: " + tradeCommandDto.getAction() + " " + symbol
+            + " is not allowed with the current position");
       }
 
+      ContextSnapshot trace = CONTEXT_SNAPSHOTS.captureAll();
       contractService.requestContract(tradeCommandDto.getIdentifier(), "STK")
           .orTimeout(30, TimeUnit.SECONDS)
-          .thenAccept(contractDetails -> {
+          .thenAccept(trace.wrap(contractDetails -> {
 
             tradeService.trade(tradeCommandDto, optionalStrategy.get(), contractDetails,
                 position);
 
-          })
+          }))
           .exceptionally(ex -> {
-            log.error("Contract request failed for {}", tradeCommandDto.getIdentifier(), ex);
-            notificationService.notify("Contract request failed: " + ex.getMessage());
+            try (ContextSnapshot.Scope scope = trace.setThreadLocals()) {
+              log.error("Contract request failed for {}", tradeCommandDto.getIdentifier(), ex);
+              notificationService.notify("Contract request failed: " + ex.getMessage());
+            }
             return null;
           });
+      return Optional.empty();
     } catch (Exception e) {
       log.error("Failed to request positions", e);
       notificationService.notify("Failed to request positions: " + e.getMessage());
-      return;
+      return Optional.of("Failed to request positions: " + e.getMessage());
     }
   }
 
