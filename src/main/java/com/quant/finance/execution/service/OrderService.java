@@ -19,6 +19,8 @@ import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.OrderRepository;
 import com.quant.finance.execution.util.EngineUtil;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +39,7 @@ public class OrderService {
   private final OrderRepository repository;
   private final NotificationService notificationService;
   private final PositionService positionService;
+  private final Tracer tracer;
   @Lazy
   @Autowired
   private IBClient ibClient;
@@ -52,6 +55,11 @@ public class OrderService {
   @Transactional(readOnly = true)
   public Optional<OrderEntity> findByBrokerOrderId(int brokerOrderId) {
     return repository.findByBrokerOrderId(brokerOrderId);
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<String> findTraceIdByBrokerOrderId(int brokerOrderId) {
+    return repository.findByBrokerOrderId(brokerOrderId).map(OrderEntity::getTraceId);
   }
 
   @Transactional(readOnly = true)
@@ -91,6 +99,7 @@ public class OrderService {
         .contractId(contractDetails.contract().conid())
         .action(alert.getAction())
         .status(ApiPending)
+        .traceId(currentTraceId())
         .build();
 
     order.setAlert(alert);
@@ -130,6 +139,7 @@ public class OrderService {
         .contractId(contractDetails.contract().conid())
         .action(tradeCommandDto.getAction())
         .status(ApiPending)
+        .traceId(currentTraceId())
         .build();
 
     order.setAlert(null);
@@ -171,6 +181,7 @@ public class OrderService {
         .status(ApiPending)
         .orderType(orderType)
         .parentOrderId(parentOrder.getBrokerOrderId())
+        .traceId(parentOrder.getTraceId())
         .build();
 
     if (orderType == OrderType.LMT) {
@@ -180,6 +191,11 @@ public class OrderService {
     }
 
     return repository.save(orderEntity);
+  }
+
+  private String currentTraceId() {
+    Span span = tracer.currentSpan();
+    return span != null ? span.context().traceId() : null;
   }
 
   private double calculateQuantity(StrategyEntity strategy, AlertEntity alert) {

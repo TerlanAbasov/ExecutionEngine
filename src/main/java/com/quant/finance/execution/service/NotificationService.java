@@ -1,7 +1,5 @@
 package com.quant.finance.execution.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quant.finance.execution.config.ApplicationProperties;
 import com.quant.finance.execution.dto.TVAlertDto;
 import jakarta.annotation.PreDestroy;
@@ -10,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j
@@ -56,7 +55,7 @@ public class NotificationService {
     }
   }
 
-  public String convertToJson(TVAlertDto model) throws JsonProcessingException {
+  public String convertToJson(TVAlertDto model) {
     ObjectMapper objectMapper = new ObjectMapper();
     return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(model);
   }

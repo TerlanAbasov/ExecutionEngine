@@ -15,3 +15,5 @@ databaseChangeLog:
             file: changelog/indexes/1.0/20260208-create-order-table-indexes.yaml
     -   include:
             file: changelog/indexes/1.0/20260220-create-execution-table-indexes.yaml
+    -   include:
+            file: changelog/tables/1.1/20261102-add-order-trace-id.yaml

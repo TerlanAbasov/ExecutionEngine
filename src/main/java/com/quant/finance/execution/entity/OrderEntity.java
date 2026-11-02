@@ -84,6 +84,9 @@ public class OrderEntity {
   @Column(nullable = false)
   private LocalDateTime updatedAt;
   private String errorMessage;
+  /** Trace id of the command or alert that placed this order, so IB's later callbacks can log under it. */
+  @Column(length = 32)
+  private String traceId;
 
   @OneToMany(mappedBy = "order", cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       fetch = FetchType.LAZY)

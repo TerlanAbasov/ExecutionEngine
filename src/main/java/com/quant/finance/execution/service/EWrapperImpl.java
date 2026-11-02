@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -84,13 +85,17 @@ public class EWrapperImpl implements EWrapper {
   public void orderStatus(int orderId, String status, Decimal filled, Decimal remaining,
                           double avgFillPrice, long l, int i1, double v1, int i2, String s1,
                           double v2) {
-    orderService.orderStatus(orderId, status, filled, remaining, avgFillPrice, l, i1, v1, i2, s1,
-        v2);
+    try (MDC.MDCCloseable trace = orderTrace(orderId)) {
+      orderService.orderStatus(orderId, status, filled, remaining, avgFillPrice, l, i1, v1, i2, s1,
+          v2);
+    }
   }
 
   @Override
   public void openOrder(int i, Contract contract, Order order, OrderState orderState) {
-    log.info("OPEN ORDER. orderId={}, status={}", order.orderId(), orderState.status());
+    try (MDC.MDCCloseable trace = orderTrace(order.orderId())) {
+      log.info("OPEN ORDER. orderId={}, status={}", order.orderId(), orderState.status());
+    }
   }
 
   @Override
@@ -145,7 +150,9 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void execDetails(int id, Contract contract, Execution execution) {
-    executionService.execDetails(id, contract, execution);
+    try (MDC.MDCCloseable trace = orderTrace(execution.orderId())) {
+      executionService.execDetails(id, contract, execution);
+    }
   }
 
   @Override
@@ -281,7 +288,17 @@ public class EWrapperImpl implements EWrapper {
 
   @Override
   public void error(int i, long l, int i1, String s, String s1) {
-    ibErrorHandler.handleError(i, l, i1, s, s1);
+    try (MDC.MDCCloseable trace = orderTrace(i)) {
+      ibErrorHandler.handleError(i, l, i1, s, s1);
+    }
+  }
+
+  /** The trace id of the command that placed this order, as log context, so IB's callbacks log under it. */
+  private MDC.MDCCloseable orderTrace(int brokerOrderId) {
+    String traceId = brokerOrderId > 0
+        ? orderService.findTraceIdByBrokerOrderId(brokerOrderId).orElse("")
+        : "";
+    return MDC.putCloseable("traceId", traceId);
   }
 
   @Override

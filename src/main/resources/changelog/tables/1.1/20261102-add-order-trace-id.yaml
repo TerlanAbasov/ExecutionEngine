@@ -1,0 +1,11 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 20261102-add-order-trace-id
+            author: Tarlan Abasov
+            changes:
+                -   addColumn:
+                        tableName: order
+                        columns:
+                            -   column:
+                                    name: trace_id
+                                    type: VARCHAR(32)

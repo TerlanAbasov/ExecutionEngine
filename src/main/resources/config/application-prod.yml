@@ -8,6 +8,8 @@ logging:
 spring:
     application:
         name: ExecutionEngine
+    jackson:
+        use-jackson2-defaults: true   # Jackson 3 (Boot 4); keep Boot 3's JSON behaviour for the API
     datasource:
         url: jdbc:postgresql://127.0.0.1:5432/quant
         username: ${QUANT_ENGINE_USER}

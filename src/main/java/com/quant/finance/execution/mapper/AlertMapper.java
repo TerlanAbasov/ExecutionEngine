@@ -1,7 +1,5 @@
 package com.quant.finance.execution.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ib.client.Types.Action;
 import com.quant.finance.execution.dto.TVAlertDto;
 import com.quant.finance.execution.entity.AlertEntity;
@@ -14,6 +12,8 @@ import java.time.format.DateTimeParseException;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Mapper(componentModel = "spring")
 public interface AlertMapper {
@@ -157,7 +157,7 @@ public interface AlertMapper {
 
     try {
       return OBJECT_MAPPER.writeValueAsString(tvAlertDto);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       log.error(e.getMessage(), e);
       return null;
     }
