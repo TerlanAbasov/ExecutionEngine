@@ -33,7 +33,7 @@ public class IBErrorHandler {
   private final AtomicLong lastNotificationTime = new AtomicLong(0);
 
   private static final Set<Integer> CONNECTION_OK_CODES = Set.of(2104, 2106, 2158);
-  private static final Set<Integer> INFO_CODES = Set.of(2103, 2107, 2108, 10186);
+  private static final Set<Integer> INFO_CODES = Set.of(2103, 2107, 2108, 2151, 10186);
   private static final Set<Integer> WARNING_CODES =
       Set.of(200, 201, 202, 321, 326, 399, 503, 504, 507, 1100, 1101, 1102, 2110, 10147);
 
