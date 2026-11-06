@@ -53,7 +53,7 @@ public class StockTradeExecutor implements TradeExecutor {
       Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
       ibClient.placeOrder(contractDetails.contract(), parentOrder);
 
-      if (parentOrder.action() == Types.Action.BUY) {
+      if (opensPosition(parentOrderEntity)) {
         placeBacketOrders(contractDetails, parentOrderEntity, parentOrder);
       }
 
@@ -78,7 +78,7 @@ public class StockTradeExecutor implements TradeExecutor {
       Order parentOrder = createParentOrder(parentOrderEntity, contractDetails);
       ibClient.placeOrder(contractDetails.contract(), parentOrder);
 
-      if (parentOrder.action() == Types.Action.BUY) {
+      if (opensPosition(parentOrderEntity)) {
         placeBacketOrders(contractDetails, parentOrderEntity, parentOrder);
       }
 
@@ -96,14 +96,17 @@ public class StockTradeExecutor implements TradeExecutor {
 
   private void placeBacketOrders(ContractDetails contractDetails, OrderEntity parentOrderEntity,
                                  Order parentOrder) {
+    Types.Action childAction =
+        parentOrder.action() == Types.Action.BUY ? Types.Action.SELL : Types.Action.BUY;
+
     OrderEntity tpOrderEntity =
-        orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.LMT, Types.Action.SELL);
+        orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.LMT, childAction);
 
     Order tpOrder = createChildOrder(tpOrderEntity, parentOrder, contractDetails);
     ibClient.placeOrder(contractDetails.contract(), tpOrder);
 
     OrderEntity slOrderEntity =
-        orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.STP, Types.Action.SELL);
+        orderService.buildAndSaveChildOrder(parentOrderEntity, OrderType.STP, childAction);
 
     Order slOrder = createChildOrder(slOrderEntity, parentOrder, contractDetails);
     ibClient.placeOrder(contractDetails.contract(), slOrder);
@@ -154,15 +157,17 @@ public class StockTradeExecutor implements TradeExecutor {
 
   private Order setLimitOrAuxPrice(Order order, OrderEntity orderEntity,
                                    ContractDetails contractDetails) {
-    if (order.action() == Types.Action.BUY) {
-      setLimitPrice(orderEntity, contractDetails, order);
-      order.transmit(false);
-    } else if (order.action() == Types.Action.SELL) {
-      setAuxPrice(orderEntity, contractDetails, order);
-      order.transmit(true);
-    }
+    setLimitPrice(orderEntity, contractDetails, order);
+    order.transmit(!opensPosition(orderEntity));
 
     return order;
+  }
+
+  /**
+   * Entry orders carry TP/SL prices for their bracket; exit orders don't.
+   */
+  private boolean opensPosition(OrderEntity orderEntity) {
+    return orderEntity.getTakeProfitPrice() != null;
   }
 
   @Override
