@@ -5,6 +5,7 @@ import com.quant.finance.execution.dto.TradeCommandDto;
 import com.quant.finance.execution.entity.AlertEntity;
 import com.quant.finance.execution.entity.StrategyEntity;
 import com.quant.finance.execution.enums.AlertState;
+import com.quant.finance.execution.enums.PositionType;
 import com.quant.finance.execution.model.Position;
 import com.quant.finance.execution.repository.StrategyRepository;
 import com.quant.finance.execution.util.EngineUtil;
@@ -50,7 +51,7 @@ public class StrategyService {
 
       log.info("Position validation. alertSymbol={}, existingPosition={}", symbol, position);
 
-      if (!checkIfQuantityExecutable(alert, position)) {
+      if (!checkIfQuantityExecutable(alert, optionalStrategy.get(), position)) {
         alertService.updateStateAndDescription(alert, AlertState.PROCESSED,
             "Quantity check is false.");
         return;
@@ -99,7 +100,7 @@ public class StrategyService {
 
       log.info("Position validation. alertSymbol={}, existingPosition={}", symbol, position);
 
-      if (!checkIfQuantityExecutable(tradeCommandDto, position)) {
+      if (!checkIfQuantityExecutable(tradeCommandDto, optionalStrategy.get(), position)) {
         log.error("Quantity check is false for {}", tradeCommandDto);
         return Optional.of("Quantity check failed: " + tradeCommandDto.getAction() + " " + symbol
             + " is not allowed with the current position");
@@ -129,17 +130,26 @@ public class StrategyService {
     }
   }
 
-  private boolean checkIfQuantityExecutable(AlertEntity alert, Position position) {
+  private boolean checkIfQuantityExecutable(AlertEntity alert, StrategyEntity strategy,
+                                            Position position) {
     Action action = alert.getAction();
     double existingQuantity = position != null ? position.getQuantity() : 0d;
 
-    boolean executable = (Action.BUY.equals(action) && existingQuantity <= 0)
-        || (Action.SELL.equals(action) && existingQuantity > 0);
+    boolean executable =
+        isActionAllowed(strategy.getPositionType(), action, existingQuantity);
+
+    if (executable && alert.getAssetClass().equals("CRYPTO")
+        && Action.SELL.equals(action) && existingQuantity == 0) {
+      log.info("Short selling is not supported for crypto. symbol={}", alert.getSymbol());
+      executable = false;
+    }
 
     if (!executable) {
       String message = String.format(
-          "Quantity check is false. symbol=%s, peerSymbol=%s, action=%s, existingQuantity=%.2f",
-          alert.getSymbol(), alert.getPeerSymbol(), action, existingQuantity);
+          "Quantity check is false. symbol=%s, peerSymbol=%s, action=%s, "
+              + "positionType=%s, existingQuantity=%.2f",
+          alert.getSymbol(), alert.getPeerSymbol(), action, strategy.getPositionType(),
+          existingQuantity);
       log.info(message);
       notificationService.notify(message);
     }
@@ -147,22 +157,38 @@ public class StrategyService {
     return executable;
   }
 
-  private boolean checkIfQuantityExecutable(TradeCommandDto tradeCommandDto, Position position) {
+  private boolean checkIfQuantityExecutable(TradeCommandDto tradeCommandDto,
+                                            StrategyEntity strategy, Position position) {
     Action action = tradeCommandDto.getAction();
     double existingQuantity = position != null ? position.getQuantity() : 0d;
 
-    boolean executable = (Action.BUY.equals(action) && existingQuantity <= 0)
-        || (Action.SELL.equals(action) && existingQuantity > 0);
+    boolean executable =
+        isActionAllowed(strategy.getPositionType(), action, existingQuantity);
 
     if (!executable) {
       String message = String.format(
-          "Quantity check is false. symbol=%s, action=%s, existingQuantity=%.2f",
-          tradeCommandDto.getIdentifier(), action, existingQuantity);
+          "Quantity check is false. symbol=%s, action=%s, positionType=%s, existingQuantity=%.2f",
+          tradeCommandDto.getIdentifier(), action, strategy.getPositionType(), existingQuantity);
       log.info(message);
       notificationService.notify(message);
     }
 
     return executable;
+  }
+
+  /**
+   * Opens only from a flat position; closes only the side the strategy trades.
+   */
+  private boolean isActionAllowed(PositionType positionType, Action action,
+                                  double existingQuantity) {
+    return switch (positionType) {
+      case LONG, LONG_DAY -> (Action.BUY.equals(action) && existingQuantity == 0)
+          || (Action.SELL.equals(action) && existingQuantity > 0);
+      case SHORT -> (Action.SELL.equals(action) && existingQuantity == 0)
+          || (Action.BUY.equals(action) && existingQuantity < 0);
+      case LONG_SHORT -> (Action.BUY.equals(action) && existingQuantity <= 0)
+          || (Action.SELL.equals(action) && existingQuantity >= 0);
+    };
   }
 
   public Optional<StrategyEntity> checkStrategy(String strategyName, BigDecimal barHighValue) {

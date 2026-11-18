@@ -103,24 +103,26 @@ public class OrderService {
         .build();
 
     order.setAlert(alert);
+    double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
 
     if (alert.getAction() == Action.BUY) {
       order.setOrderType(strategy.getBuyOrderType());
       if (strategy.getBuyOrderType() == OrderType.LMT) {
         order.setLimitPrice(alert.getClose().multiply(strategy.getBuyLimitCeiling()));
       }
-
-      order.setQuantity(calculateQuantity(strategy, alert));
-      order.setTakeProfitPrice(calculateTakeProfitPrice(strategy, alert));
-      order.setStopLossPrice(calculateStopLossPrice(strategy, alert));
     } else if (alert.getAction() == Action.SELL) {
       order.setOrderType(strategy.getSellOrderType());
-      double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
-      order.setQuantity(existingQuantity);
-
       if (strategy.getSellOrderType() == OrderType.LMT) {
         order.setLimitPrice(alert.getOpen().multiply(strategy.getSellLimitFloor()));
       }
+    }
+
+    if (existingQuantity == 0) {
+      order.setQuantity(calculateQuantity(strategy, alert));
+      order.setTakeProfitPrice(calculateTakeProfitPrice(strategy, alert));
+      order.setStopLossPrice(calculateStopLossPrice(strategy, alert));
+    } else {
+      order.setQuantity(Math.abs(existingQuantity));
     }
 
     order = repository.save(order);
@@ -143,24 +145,26 @@ public class OrderService {
         .build();
 
     order.setAlert(null);
+    double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
 
     if (tradeCommandDto.getAction() == Action.BUY) {
       order.setOrderType(strategy.getBuyOrderType());
       if (strategy.getBuyOrderType() == OrderType.LMT) {
         order.setLimitPrice(tradeCommandDto.getClose().multiply(strategy.getBuyLimitCeiling()));
       }
-
-      order.setQuantity(calculateQuantity(strategy, tradeCommandDto));
-      order.setTakeProfitPrice(calculateTakeProfitPrice(strategy, tradeCommandDto));
-      order.setStopLossPrice(calculateStopLossPrice(strategy, tradeCommandDto));
     } else if (tradeCommandDto.getAction() == Action.SELL) {
       order.setOrderType(strategy.getSellOrderType());
-      double existingQuantity = existingPosition != null ? existingPosition.getQuantity() : 0d;
-      order.setQuantity(existingQuantity);
-
       if (strategy.getSellOrderType() == OrderType.LMT) {
         order.setLimitPrice(tradeCommandDto.getOpen().multiply(strategy.getSellLimitFloor()));
       }
+    }
+
+    if (existingQuantity == 0) {
+      order.setQuantity(calculateQuantity(strategy, tradeCommandDto));
+      order.setTakeProfitPrice(calculateTakeProfitPrice(strategy, tradeCommandDto));
+      order.setStopLossPrice(calculateStopLossPrice(strategy, tradeCommandDto));
+    } else {
+      order.setQuantity(Math.abs(existingQuantity));
     }
 
     order = repository.save(order);
@@ -213,6 +217,13 @@ public class OrderService {
 
   private BigDecimal calculateTakeProfitPrice(StrategyEntity strategy,
                                               AlertEntity alert) {
+    if (alert.getAction() == Action.SELL) {
+      BigDecimal percentageValue =
+          (alert.getLow().multiply(BigDecimal.valueOf(strategy.getTakeProfitPercentage())))
+              .divide(BigDecimal.valueOf(100));
+
+      return alert.getLow().subtract(percentageValue);
+    }
 
     BigDecimal percentageValue =
         (alert.getHigh().multiply(BigDecimal.valueOf(strategy.getTakeProfitPercentage())))
@@ -226,6 +237,13 @@ public class OrderService {
 
   private BigDecimal calculateTakeProfitPrice(StrategyEntity strategy,
                                               TradeCommandDto commandDto) {
+    if (commandDto.getAction() == Action.SELL) {
+      BigDecimal percentageValue =
+          (commandDto.getLow().multiply(BigDecimal.valueOf(strategy.getTakeProfitPercentage())))
+              .divide(BigDecimal.valueOf(100));
+
+      return commandDto.getLow().subtract(percentageValue);
+    }
 
     BigDecimal percentageValue =
         (commandDto.getHigh().multiply(BigDecimal.valueOf(strategy.getTakeProfitPercentage())))
@@ -239,6 +257,14 @@ public class OrderService {
 
   private BigDecimal calculateStopLossPrice(StrategyEntity strategy,
                                             AlertEntity alert) {
+    if (alert.getAction() == Action.SELL) {
+      BigDecimal percentageValue =
+          (alert.getHigh().multiply(BigDecimal.valueOf(strategy.getStopLossPercentage())))
+              .divide(BigDecimal.valueOf(100));
+
+      return alert.getHigh().add(percentageValue);
+    }
+
     BigDecimal percentageValue =
         (alert.getLow().multiply(BigDecimal.valueOf(strategy.getStopLossPercentage())))
             .divide(BigDecimal.valueOf(100));
@@ -251,6 +277,14 @@ public class OrderService {
 
   private BigDecimal calculateStopLossPrice(StrategyEntity strategy,
                                             TradeCommandDto commandDto) {
+    if (commandDto.getAction() == Action.SELL) {
+      BigDecimal percentageValue =
+          (commandDto.getHigh().multiply(BigDecimal.valueOf(strategy.getStopLossPercentage())))
+              .divide(BigDecimal.valueOf(100));
+
+      return commandDto.getHigh().add(percentageValue);
+    }
+
     BigDecimal percentageValue =
         (commandDto.getLow().multiply(BigDecimal.valueOf(strategy.getStopLossPercentage())))
             .divide(BigDecimal.valueOf(100));
